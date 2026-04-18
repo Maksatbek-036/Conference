@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    android:rowCount="3"
+    android:columnCount="1"
+    android:padding="16dp"
+
+    >
+
+ <LinearLayout
+     android:layout_row="0"
+     android:gravity="center_horizontal"
+     android:layout_width="match_parent"
+     >
+     <ImageButton
+         android:layout_width="60dp"
+         android:layout_height="60dp"
+         android:background="@drawable/icons_form_circle"
+         android:src="@drawable/iconstack_io____mic_"
+         />
+
+     <ImageButton
+         android:layout_marginHorizontal="15dp"
+         android:layout_width="60dp"
+         android:layout_height="60dp"
+         android:background="@drawable/icons_form_circle"
+         android:src="@drawable/iconstack_io____video_camera_"
+         />
+     <ImageButton
+         android:layout_width="60dp"
+         android:layout_height="60dp"
+         android:background="@drawable/icon_form_circle_red"
+         android:src="@drawable/iconstack_call_end"
+
+         />
+ </LinearLayout>
+
+   <LinearLayout
+       android:layout_row="1"
+       android:gravity="center_horizontal"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:layout_marginTop="15dp"
+       >
+
+       <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:gravity="center_horizontal"
+          >
+          <ImageButton
+
+              android:layout_marginHorizontal="15dp"
+              android:layout_width="40dp"
+              android:layout_height="40dp"
+              android:background="@drawable/icons_form_circle"
+              android:src="@drawable/iconstack_io____tv_minimal_"
+              />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="@string/screen"
+              />
+      </LinearLayout>
+       <LinearLayout
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:orientation="vertical"
+           android:gravity="center_horizontal"
+           >
+           <ImageButton
+
+               android:layout_marginHorizontal="15dp"
+               android:layout_width="40dp"
+               android:layout_height="40dp"
+               android:background="@drawable/icons_form_circle"
+               android:contentDescription="TODO"
+               android:src="@drawable/iconstack_io____chat_bold_"
+               />
+           <TextView
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:text="@string/chat_text"
+               />
+       </LinearLayout>
+       <LinearLayout
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:orientation="vertical"
+           android:gravity="center_horizontal"
+           >
+           <ImageButton
+               android:layout_marginHorizontal="15dp"
+               android:layout_width="40dp"
+               android:layout_height="40dp"
+               android:background="@drawable/icons_form_circle"
+               android:src="@drawable/iconstack_io____ic_fluent_people_24_regular_"
+               />
+           <TextView
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:text="@string/attendee"
+               />
+       </LinearLayout>
+       <LinearLayout
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:orientation="vertical"
+           android:gravity="center_horizontal"
+           >
+           <ImageButton
+               android:layout_marginHorizontal="15dp"
+               android:layout_width="40dp"
+               android:layout_height="40dp"
+               android:background="@drawable/icons_form_circle"
+               android:src="@drawable/iconstack_io____dots_three_vertical_bold_"
+               />
+           <TextView
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:text="@string/etc"
+               />
+       </LinearLayout>
+
+
+   </LinearLayout>
+
+
+</GridLayout>
