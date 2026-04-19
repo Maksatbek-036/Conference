@@ -9,11 +9,18 @@
         <item name="android:background">@drawable/icons_form_circle</item>
         <item name="android:textColor">@color/white</item>
     </style>
-    <style name="EditText" parent="EditText">
+    <style name="EditText">
         <item name="android:background">@drawable/edittext_background</item>
         <item name="android:textColor">@color/gray_700</item>
     </style>
 
+
+    <style name="Widget.Button.Green" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/icon_form_circle</item>
+        <item name="android:backgroundTint">#00000000</item>
+
+        <item name="android:textColor">@color/emerald500</item>
+    </style>
 
     <!-- Красная кнопка (выход/ошибка) -->
     <style name="ParticipantCard">

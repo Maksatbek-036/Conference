@@ -38,9 +38,9 @@ public class MainScreen extends AppCompatActivity {
         binding.recyclerView.setAdapter(adapter);
 
         binding.button.setOnClickListener(View -> {
-            // Внутри Activity или Fragment
-            ChatFragment chatFragment = new ChatFragment();
-            chatFragment.show(getSupportFragmentManager(), "ChatFragment");
+
+            BottomFragment bottomFragment = new BottomFragment();
+            bottomFragment.show(getSupportFragmentManager(), bottomFragment.getTag());
 
         });
 

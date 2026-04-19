@@ -3,11 +3,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
 
     android:rowCount="3"
     android:columnCount="1"
     android:padding="16dp"
-
+    tools:context=".BottomFragment"
     >
 
  <LinearLayout
@@ -73,6 +74,7 @@
            android:gravity="center_horizontal"
            >
            <ImageButton
+               android:id="@+id/chat_button"
 
                android:layout_marginHorizontal="15dp"
                android:layout_width="40dp"
@@ -94,6 +96,7 @@
            android:gravity="center_horizontal"
            >
            <ImageButton
+               android:id="@+id/participant_button"
                android:layout_marginHorizontal="15dp"
                android:layout_width="40dp"
                android:layout_height="40dp"
