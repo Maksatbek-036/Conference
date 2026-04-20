@@ -39,8 +39,9 @@ public class MainScreen extends AppCompatActivity {
 
         binding.button.setOnClickListener(View -> {
 
-            BottomFragment bottomFragment = new BottomFragment();
-            bottomFragment.show(getSupportFragmentManager(), bottomFragment.getTag());
+           VideoHub videoHub=new VideoHub();
+           Intent intent=new Intent(this, VideoHub.class);
+           startActivity(intent);
 
         });
 
@@ -49,8 +50,6 @@ public class MainScreen extends AppCompatActivity {
     private void loadConferences() {
         // Очищаем список перед добавлением, если метод вызывается повторно
         conferences.clear();
-        conferences.add(new Conference("1", "Android Dev", "Conf", 151515L, "Astana", true));
-        conferences.add(new Conference("2", "Java Summit", "Workshop", 161616L, "Almaty", false));
         conferences.add(new Conference("3", "Kotlin Meetup", "Conf", 171717L, "Astana", true));
         conferences.add(new Conference("4", "Swift Conference", "Workshop", 181818L, "Almaty", false));
         conferences.add(new Conference("5", "Flutter Expo", "Conf", 191919L, "Astana", true));

@@ -10,10 +10,11 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/participantsRecycler"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:listitem="@layout/attendee_item"
+        android:layout_height="650dp"
+        tools:listitem="@layout/participant_item"
+        app:spanCount="1"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-        android:padding="8dp"
+        android:layout_weight="1"
 
         />
 </androidx.constraintlayout.widget.ConstraintLayout>

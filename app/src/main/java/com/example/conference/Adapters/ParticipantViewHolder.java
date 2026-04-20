@@ -1,31 +1,42 @@
 package com.example.conference.Adapters;
 
+import android.view.SurfaceView;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.conference.Models.Conference;
+import com.example.conference.Models.Participant;
 import com.example.conference.R;
+import com.example.conference.databinding.ParticipantItemBinding;
 
 public class ParticipantViewHolder extends RecyclerView.ViewHolder {
-
-    TextView title;
-    TextView identifity;
-    TextView date;
+ParticipantItemBinding binding;
 
     public ParticipantViewHolder(@NonNull View itemView) {
         super(itemView);
-        title = itemView.findViewById(R.id.list_plans_name);
-        identifity = itemView.findViewById(R.id.list_plans_identifity);
-        date = itemView.findViewById(R.id.list_plans_time);
+     binding=ParticipantItemBinding.bind(itemView);
+
     }
 
-    public void bind(Conference conference) {
-        title.setText(conference.getTitles());
-        identifity.setText(conference.getDescription());
-        date.setText(conference.getDate());
+    public void bind(Participant participant) {
+binding.participantName.setText(participant.getName());
+
+if(participant.getAvatarUrl()==null){
+   binding.avatarImage.setImageResource(R.drawable.iconstack_io____user_);
+}
+else{
+    binding.avatarImage.setImageResource(R.drawable.iconstack_io____user_);
+}
+if(participant.isVideoEnabled()){
+    binding.videoSurface.setVisibility(View.VISIBLE);
+}
+else{
+    binding.videoSurface.setVisibility(View.GONE);
+}
     }
 
 }

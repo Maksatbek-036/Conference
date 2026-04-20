@@ -7,6 +7,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.conference.Models.Conference;
+import com.example.conference.Models.Message;
+import com.example.conference.Models.Participant;
 import com.example.conference.R;
 
 public class ConferenceViewHolder extends RecyclerView.ViewHolder {
@@ -27,5 +29,6 @@ public class ConferenceViewHolder extends RecyclerView.ViewHolder {
         identifity.setText(conference.getDescription());
         date.setText(conference.getDate());
     }
+
 
 }

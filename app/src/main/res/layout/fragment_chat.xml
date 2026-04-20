@@ -34,7 +34,7 @@
             tools:listitem="@layout/message_item"
             android:layout_weight="1"
 
-            android:background="@color/green_light"
+
             android:padding="8dp"/>
 
         <!-- Нижняя панель ввода -->
