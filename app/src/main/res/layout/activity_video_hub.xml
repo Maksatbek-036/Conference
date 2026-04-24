@@ -10,11 +10,15 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/participantsRecycler"
         android:layout_width="match_parent"
-        android:layout_height="650dp"
+        android:layout_height="700dp"
         tools:listitem="@layout/participant_item"
-        app:spanCount="1"
-        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-        android:layout_weight="1"
+        app:spanCount="2"
 
+
+        android:layout_marginTop="3dp"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         />
 </androidx.constraintlayout.widget.ConstraintLayout>
