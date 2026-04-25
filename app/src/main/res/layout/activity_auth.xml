@@ -2,7 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".AuthActivity">
@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:hint="Enter email"
         android:id="@+id/email"
-        android:layout_constraintTop_toTopOf="parent"
+       app:layout_constraintTop_toTopOf="parent"
         android:inputType="textEmailAddress"
         style="@style/Widget.Material3.TextInputEditText.OutlinedBox"
         />

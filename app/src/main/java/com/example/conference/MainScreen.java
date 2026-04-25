@@ -2,60 +2,57 @@ package com.example.conference;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager; // Важно!
 
 import com.example.conference.Adapters.ConferenceAdapter;
 import com.example.conference.Models.Conference;
+import com.example.conference.ViewModels.ConferenceViewModel;
 import com.example.conference.databinding.ActivityMainScreenBinding;
 
 import java.util.ArrayList;
 
 public class MainScreen extends AppCompatActivity {
-
-    // Рекомендуется использовать интерфейс List для объявления
-    private final ArrayList<Conference> conferences = new ArrayList<>();
     private ActivityMainScreenBinding binding;
+    private ConferenceViewModel viewModel;
     private ConferenceAdapter adapter;
+    private Cache cache;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        viewModel = new ViewModelProvider(this).get(ConferenceViewModel.class);
 
-        // 1. Инициализация Binding
         binding = ActivityMainScreenBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // 2. Настройка RecyclerView (LayoutManager обязателен!)
-        // Если он не прописан в XML, добавьте эту строку:
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        // 3. Загрузка данных
-        loadConferences();
-
-        // 4. Инициализация адаптера
-        adapter = new ConferenceAdapter(conferences);
+cache=new Cache(this);
+        // Инициализация адаптера с пустым списком
+        adapter = new ConferenceAdapter(new ArrayList<>());
         binding.recyclerView.setAdapter(adapter);
-
-        binding.button.setOnClickListener(View -> {
-
-           VideoHub videoHub=new VideoHub();
-           Intent intent=new Intent(this, VideoHub.class);
-           startActivity(intent);
-
+viewModel.loadConferences(cache.getToken());
+        // Подписка на LiveData
+        viewModel.getConferences().observe(this, conferences -> {
+            adapter.setConferences(conferences); // метод в адаптере для обновления списка
+            adapter.notifyDataSetChanged();
         });
 
+        binding.button.setOnClickListener(v -> {
+            Intent intent = new Intent(this, VideoHub.class);
+            startActivity(intent);
+        });
+
+        binding.myButton.setOnClickListener(v -> {
+            if (binding.joinedForm.getVisibility() == View.GONE) {
+                binding.joinedForm.setVisibility(View.VISIBLE);
+            } else {
+                binding.joinedForm.setVisibility(View.GONE);
+            }
+        });
     }
-
-    private void loadConferences() {
-        // Очищаем список перед добавлением, если метод вызывается повторно
-        conferences.clear();
-        conferences.add(new Conference("3", "Kotlin Meetup", "Conf", 171717L, "Astana", true));
-        conferences.add(new Conference("4", "Swift Conference", "Workshop", 181818L, "Almaty", false));
-        conferences.add(new Conference("5", "Flutter Expo", "Conf", 191919L, "Astana", true));
-
-
-
-    }
-    }
-
+}

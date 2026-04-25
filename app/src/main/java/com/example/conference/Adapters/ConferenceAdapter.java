@@ -37,4 +37,12 @@ private ArrayList<Conference> conferences=null;
 
         return conferences.size();
     }
+
+    public void setConferences(List<Conference> conferences) {
+        this.conferences.clear();
+        if(conferences!=null){
+
+        this.conferences.addAll(conferences);
+        }
+    }
 }

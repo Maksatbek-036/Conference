@@ -4,6 +4,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.view.LayoutInflater;
@@ -13,6 +14,7 @@ import android.view.ViewGroup;
 import com.example.conference.Adapters.MessageAdapter;
 import com.example.conference.Models.Message;
 import com.example.conference.Models.Participant;
+import com.example.conference.ViewModels.ChatViewModel;
 import com.example.conference.databinding.FragmentChatBinding;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
@@ -22,11 +24,13 @@ import java.util.ArrayList;
 public class ChatFragment extends BottomSheetDialogFragment {
 
 FragmentChatBinding binding;
+ChatViewModel viewModel;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+viewModel= new ViewModelProvider(this).get(ChatViewModel.class);
 
     }
 

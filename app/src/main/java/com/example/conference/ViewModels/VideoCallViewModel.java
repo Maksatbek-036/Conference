@@ -53,7 +53,7 @@ public class VideoCallViewModel extends AndroidViewModel {
 
     private void initSignalR() {
         // !!! ЗАМЕНИТЕ ЭТОТ URL НА РЕАЛЬНЫЙ IP ВАШЕГО СЕРВЕРА !!!
-        String serverUrl = "https://10.0.2.2:5001/hubs/video"; // Пример для локального сервера (эмулятор)
+        String serverUrl = "http://192.168.0.106:5000/hubs/video"; // Пример для локального сервера (эмулятор)
 
         hubConnection = HubConnectionBuilder.create(serverUrl).build();
 

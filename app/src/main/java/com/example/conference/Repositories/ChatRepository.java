@@ -1,7 +1,7 @@
 package com.example.conference.Repositories;
 
 import com.example.conference.Api.ChatApi;
-import com.example.conference.Hubs.ChatHub;
+import com.example.conference.Repositories.ChatHub;
 import com.example.conference.Models.Message;
 import com.example.conference.Api.RetrofitClient;
 import com.microsoft.signalr.Action1;
