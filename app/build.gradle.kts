@@ -47,5 +47,12 @@ android {
         testImplementation(libs.junit)
         androidTestImplementation(libs.ext.junit)
         androidTestImplementation(libs.espresso.core)
+            //для видео
         implementation("io.github.webrtc-sdk:android:144.7559.04")
+        implementation("com.microsoft.signalr:signalr:10.0.7")
+//для обращения к серверу
+        implementation("com.squareup.retrofit2:retrofit:3.0.0")
+        implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+        implementation("com.squareup.okhttp3:okhttp:4.10.0")
+        implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
 }
