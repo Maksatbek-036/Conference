@@ -46,6 +46,36 @@ public class VideoCallRepository {
         startCameraCapture();
         startAudioCapture(); // Запуск микрофона
     }
+    // Добавьте этот метод в VideoCallRepository.java
+    public void joinCall(SessionDescription remoteOffer, SdpObserver sdpObserver) {
+        if (peerConnection == null) setupPeerConnection();
+
+        // 1. Устанавливаем удаленный Offer
+        peerConnection.setRemoteDescription(new SimpleSdpObserver() {
+            @Override
+            public void onSetSuccess() {
+                // 2. Только после успеха установки создаем Answer
+                peerConnection.createAnswer(new SimpleSdpObserver() {
+                    @Override
+                    public void onCreateSuccess(SessionDescription localAnswer) {
+                        // 3. Устанавливаем свой Answer как Local Description
+                        peerConnection.setLocalDescription(new SimpleSdpObserver() {
+                            @Override
+                            public void onSetSuccess() {
+                                // 4. Сообщаем ViewModel, что всё готово для отправки
+                                sdpObserver.onCreateSuccess(localAnswer);
+                            }
+                        }, localAnswer);
+                    }
+                }, new MediaConstraints());
+            }
+
+            @Override
+            public void onSetFailure(String s) {
+                sdpObserver.onSetFailure(s);
+            }
+        }, remoteOffer);
+    }
 
     private void startAudioCapture() {
         AudioSource audioSource = factory.createAudioSource(new MediaConstraints());

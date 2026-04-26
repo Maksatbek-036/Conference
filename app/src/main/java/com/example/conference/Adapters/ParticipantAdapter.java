@@ -8,6 +8,8 @@ import com.example.conference.Models.Participant;
 import com.example.conference.R;
 import com.example.conference.Repositories.VideoCallRepository;
 import org.webrtc.EglBase;
+import org.webrtc.VideoTrack;
+
 import java.util.ArrayList;
 
 public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHolder> {
@@ -67,4 +69,17 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
     public int getItemCount() {
         return participants.size();
     }
+
+    public void setRemoteTrack(VideoTrack videoTrack) {
+        if (videoTrack == null) return;
+
+        // Iterate through participants except the first one (local self-view)
+        for (int i = 1; i < participants.size(); i++) {
+            Participant participant = participants.get(i);
+
+            // Find the ViewHolder for this participant
+            notifyItemChanged(i, videoTrack);
+        }
+    }
+
 }

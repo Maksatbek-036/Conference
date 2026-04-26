@@ -1,10 +1,15 @@
 package com.example.conference.Repositories;
 
+import android.content.Context;
+import android.util.Log;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.conference.Api.ConferenceApi;
 import com.example.conference.Api.RetrofitClient;
+import com.example.conference.Cache;
+import com.example.conference.Contracts.CreateConferenceRequest;
 import com.example.conference.Models.Conference;
 
 import java.util.List;
@@ -16,7 +21,9 @@ import retrofit2.Response;
 public class ConferenceRepository {
     private final ConferenceApi api;
 
-    public ConferenceRepository() {
+private Cache cache;
+    public ConferenceRepository(Context context, Cache cache) {
+    this.cache=cache;
         this.api = RetrofitClient.getApi(ConferenceApi.class);
     }
 
@@ -40,5 +47,22 @@ public class ConferenceRepository {
         });
 
         return conferencesLiveData;
+    }
+    public void saveConference(String title, String description, long date, String startTime,
+                                String endTime, String location, boolean isOnline) {
+
+      api.createConference("Bearer " + cache.getToken(), new CreateConferenceRequest(title, description, date, startTime, endTime, location, isOnline))
+              .enqueue(new Callback<Conference>() {
+                  @Override
+                  public void onResponse(Call<Conference> call, Response<Conference> response) {
+
+                      Log.d("ConferenceRepository", "Response: " + response.toString());
+                  }
+
+                  @Override
+                  public void onFailure(Call<Conference> call, Throwable t) {
+                      Log.e("ConferenceRepository", "Error: " + t.getMessage());
+                  }
+              });
     }
 }

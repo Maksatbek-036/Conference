@@ -79,7 +79,7 @@
             >
 
             <ImageButton
-
+                    android:id="@+id/shedule_button"
                 android:background="@drawable/icon_form_circle"
                 android:src="@drawable/iconstack_io____calendar_line_"
                 android:layout_width="40dp"

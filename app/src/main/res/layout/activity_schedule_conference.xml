@@ -1,0 +1,62 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <EditText
+            style="@style/GreenEditText"
+            android:id="@+id/conferenceTitle"
+            android:hint="Название конференции"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <EditText
+            android:id="@+id/conferenceDescription"
+            android:hint="Описание"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minLines="3"/>
+
+        <EditText
+            android:id="@+id/conferenceDate"
+            android:hint="Дата (например: 2026-04-25)"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <EditText
+            android:id="@+id/conferenceStartTime"
+            android:hint="Время начала (например: 10:00)"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <EditText
+            android:id="@+id/conferenceEndTime"
+            android:hint="Время окончания (например: 12:00)"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <EditText
+            android:id="@+id/conferenceLocation"
+            android:hint="Место проведения"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <CheckBox
+            android:id="@+id/conferenceIsOnline"
+            android:text="Онлайн конференция"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/saveConferenceButton"
+            android:text="Запланировать"
+            style="@style/EmeraldButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"/>
+    </LinearLayout>
+</FrameLayout>

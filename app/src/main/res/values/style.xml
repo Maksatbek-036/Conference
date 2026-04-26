@@ -43,6 +43,25 @@
         <item name="android:textColor">@android:color/black</item>
         <item name="android:textSize">16sp</item>
     </style>
+    <!-- styles.xml -->
+
+        <style name="EmeraldButton" >
+            <item name="android:layout_width">match_parent</item>
+            <item name="android:layout_height">60dp</item>
+
+            <item name="android:backgroundTint">@color/emerald500</item>
+            <item name="android:textSize">20sp</item>
+            <item name="cornerRadius">15dp</item>
+        </style>
+    <style name="GreenEditText" parent="Widget.AppCompat.EditText">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+
+
+        <item name="android:background">@drawable/edittext_background</item>
+       <item name="android:textColor">@color/gray_700</item>
+        <item name="android:padding">10dp</item>
+    </style>
 
 
 </resources>
