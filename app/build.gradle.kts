@@ -4,11 +4,7 @@ plugins {
 
 android {
     namespace = "com.example.conference"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.conference"
@@ -38,21 +34,30 @@ android {
     }
 }
 
-    dependencies {
-        implementation(libs.appcompat)
-        implementation(libs.material)
-        implementation(libs.activity)
-        implementation(libs.constraintlayout)
-        implementation(libs.recyclerview)
-        testImplementation(libs.junit)
-        androidTestImplementation(libs.ext.junit)
-        androidTestImplementation(libs.espresso.core)
-            //для видео
-        implementation("io.github.webrtc-sdk:android:144.7559.04")
-        implementation("com.microsoft.signalr:signalr:10.0.7")
-//для обращения к серверу
-        implementation("com.squareup.retrofit2:retrofit:3.0.0")
-        implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-        implementation("com.squareup.okhttp3:okhttp:4.10.0")
-        implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
+dependencies {
+    implementation(libs.appcompat)
+    implementation(libs.material)
+    implementation(libs.activity)
+    implementation(libs.constraintlayout)
+    implementation(libs.recyclerview)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.ext.junit)
+    androidTestImplementation(libs.espresso.core)
+    
+    // WebRTC
+    implementation("io.github.webrtc-sdk:android:144.7559.04")
+    
+    // SignalR
+    implementation("com.microsoft.signalr:signalr:10.0.7")
+    implementation("org.slf4j:slf4j-android:1.7.36") // Добавлено для логов SignalR
+    
+    // Network
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
+    
+    // RxJava (SignalR использует его)
+    implementation("io.reactivex.rxjava3:rxandroid:3.0.2")
+    implementation("io.reactivex.rxjava3:rxjava:3.1.5")
 }

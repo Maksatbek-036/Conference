@@ -8,8 +8,6 @@
     android:background="@drawable/background_gradient"
     tools:context=".MainScreen">
 
-
-
     <Button
         android:id="@+id/button"
         android:layout_width="match_parent"
@@ -22,9 +20,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:cornerRadius="15dp" />
 
-        app:cornerRadius="15dp"
-         />
     <LinearLayout
         android:id="@+id/card_btn_join"
         android:layout_width="wrap_content"
@@ -43,19 +40,15 @@
             android:layout_marginHorizontal="8dp"
             android:padding="16dp"
             android:gravity="center"
-            android:background="@drawable/card_button"
-            >
+            android:background="@drawable/card_button">
 
             <ImageButton
                 android:id="@+id/myButton"
-
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginTop="8dp"
-
                 android:background="@drawable/icon_form_circle"
-                android:src="@drawable/iconstack_io____user_plus_"
-                android:text="Кнопка" />
+                android:src="@drawable/iconstack_io____user_plus_" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -63,10 +56,8 @@
                 android:text="Присоединиться"
                 android:textColor="@color/white"
                 android:textSize="18sp" />
-
-
-
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -75,74 +66,64 @@
             android:layout_marginHorizontal="8dp"
             android:padding="16dp"
             android:gravity="center"
-            android:background="@drawable/card_button"
-            >
+            android:background="@drawable/card_button">
 
             <ImageButton
-                    android:id="@+id/shedule_button"
+                android:id="@+id/shedule_button"
                 android:background="@drawable/icon_form_circle"
                 android:src="@drawable/iconstack_io____calendar_line_"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_marginTop="8dp"
-                 />
+                android:layout_marginTop="8dp" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Запланировать"
                 android:textColor="@color/white"
                 android:textSize="18sp" />
-
-
-
         </LinearLayout>
-
     </LinearLayout>
 
-<LinearLayout
-    android:id="@+id/joined_form"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginHorizontal="8dp"
-    android:layout_marginVertical="10dp"
-    android:paddingVertical="5dp"
-    app:layout_constraintTop_toBottomOf="@id/card_btn_join"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    android:orientation="vertical"
-    android:background="@drawable/card_button"
-    android:visibility="gone"
-
-    >
-    <EditText
+    <LinearLayout
+        android:id="@+id/joined_form"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="10dp"
-        android:hint="Введите код встречи"
-        android:textColorHint="@color/gray_500"
-        android:padding="10dp"
-        android:backgroundTint="@color/emerald500"
-        android:layout_margin="5dp"
-        android:background="@drawable/card_button"
-        />
-    <Button
-        android:id="@+id/join_button"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:textSize="20dp"
-        android:paddingLeft="5dp"
         android:layout_marginHorizontal="8dp"
-        android:layout_marginVertical="5dp"
-        android:backgroundTint="@color/emerald500"
-        android:text="Войти"
+        android:layout_marginVertical="10dp"
+        android:paddingVertical="5dp"
+        app:layout_constraintTop_toBottomOf="@id/card_btn_join"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        android:orientation="vertical"
+        android:background="@drawable/card_button"
+        android:visibility="gone">
 
-        app:cornerRadius="15dp"
-        />
+        <EditText
+            android:id="@+id/join_code_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
+            android:hint="Введите код встречи"
+            android:textColorHint="@color/gray_500"
+            android:padding="10dp"
+            android:backgroundTint="@color/emerald500"
+            android:layout_margin="5dp"
+            android:textColor="@color/white"
+            android:background="@drawable/card_button" />
 
-</LinearLayout>
+        <Button
+            android:id="@+id/join_button"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:textSize="20sp"
+            android:paddingLeft="5dp"
+            android:layout_marginHorizontal="8dp"
+            android:layout_marginVertical="5dp"
+            android:backgroundTint="@color/emerald500"
+            android:text="Войти"
+            app:cornerRadius="15dp" />
+    </LinearLayout>
+
     <TextView
         android:id="@+id/list_plans"
         app:layout_constraintTop_toBottomOf="@id/joined_form"
@@ -151,11 +132,9 @@
         android:text="ЗАПЛАНИРОВАННЫЕ ВСТРЕЧИ"
         android:textColor="@color/white"
         android:layout_marginTop="12dp"
-        android:layout_marginHorizontal="9dp"
-        />
+        android:layout_marginHorizontal="9dp" />
 
     <androidx.recyclerview.widget.RecyclerView
-
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -163,13 +142,7 @@
         android:layout_marginTop="12dp"
         app:layout_constraintVertical_weight="1"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-
         app:layout_constraintTop_toBottomOf="@id/list_plans"
-
-        tools:listitem="@layout/plan_item"
-
-        />
-
-
+        tools:listitem="@layout/plan_item" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

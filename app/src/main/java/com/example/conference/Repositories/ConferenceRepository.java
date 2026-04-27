@@ -20,7 +20,7 @@ import retrofit2.Response;
 
 public class ConferenceRepository {
     private final ConferenceApi api;
-
+    MutableLiveData<List<Conference>> conferencesLiveData;
 private Cache cache;
     public ConferenceRepository(Context context, Cache cache) {
     this.cache=cache;
@@ -28,7 +28,7 @@ private Cache cache;
     }
 
     public LiveData<List<Conference>> fetchConferences(String token) {
-        MutableLiveData<List<Conference>> conferencesLiveData = new MutableLiveData<>();
+     conferencesLiveData = new MutableLiveData<>();
 
         api.getConferences("Bearer " + token).enqueue(new Callback<List<Conference>>() {
             @Override

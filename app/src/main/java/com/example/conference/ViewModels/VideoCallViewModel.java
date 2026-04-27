@@ -7,15 +7,16 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.conference.Repositories.VideoCallRepository;
 import com.microsoft.signalr.HubConnection;
 import com.microsoft.signalr.HubConnectionBuilder;
+import com.microsoft.signalr.HubConnectionState;
 import org.webrtc.*;
-
-import io.reactivex.rxjava3.disposables.Disposable;
 
 public class VideoCallViewModel extends AndroidViewModel {
     private static final String TAG = "VideoCallViewModel";
     private final VideoCallRepository repository;
     private HubConnection hubConnection;
     private String targetId;
+    private String currentRoomId;
+    private boolean pendingJoin = false;
 
     public MutableLiveData<VideoTrack> remoteVideoTrack = new MutableLiveData<>();
 
@@ -25,7 +26,8 @@ public class VideoCallViewModel extends AndroidViewModel {
         PeerConnection.Observer observer = new PeerConnection.Observer() {
             @Override
             public void onIceCandidate(IceCandidate iceCandidate) {
-                if (targetId != null && hubConnection != null) {
+                // Отправляем ICE-кандидатов только если есть targetId и он не мы сами
+                if (targetId != null && hubConnection != null && hubConnection.getConnectionState() == HubConnectionState.CONNECTED) {
                     hubConnection.send("SendIceCandidate", targetId, iceCandidate.sdp);
                 }
             }
@@ -35,7 +37,6 @@ public class VideoCallViewModel extends AndroidViewModel {
                     remoteVideoTrack.postValue((VideoTrack) rtpReceiver.track());
                 }
             }
-            // Остальные заглушки методов PeerConnection.Observer...
             @Override public void onSignalingChange(PeerConnection.SignalingState s) {}
             @Override public void onIceConnectionChange(PeerConnection.IceConnectionState s) {}
             @Override public void onIceConnectionReceivingChange(boolean b) {}
@@ -52,18 +53,28 @@ public class VideoCallViewModel extends AndroidViewModel {
     }
 
     private void initSignalR() {
-        // !!! ЗАМЕНИТЕ ЭТОТ URL НА РЕАЛЬНЫЙ IP ВАШЕГО СЕРВЕРА !!!
-        String serverUrl = "http://192.168.0.106:5000/hubs/video"; // Пример для локального сервера (эмулятор)
+        String serverUrl = "http://192.168.0.106:5000/hubs/video";
 
         hubConnection = HubConnectionBuilder.create(serverUrl).build();
 
         hubConnection.on("UserJoined", userId -> {
-            Log.d(TAG, "User joined: " + userId);
+            // ИГНОРИРУЕМ САМИХ СЕБЯ
+            String myConnectionId = hubConnection.getConnectionId();
+            if (userId.equals(myConnectionId)) {
+                Log.d(TAG, "Joined successfully. My ID: " + userId);
+                return; 
+            }
+
+            Log.d(TAG, "Remote user joined: " + userId);
             this.targetId = userId;
             startCall();
         }, String.class);
 
         hubConnection.on("ReceiveSignal", (senderId, sdp) -> {
+            // Игнорируем, если пришло от самих себя (на всякий случай)
+            if (senderId.equals(hubConnection.getConnectionId())) return;
+
+            Log.d(TAG, "Received signal from: " + senderId);
             this.targetId = senderId;
             SessionDescription.Type type = sdp.contains("offer") ?
                     SessionDescription.Type.OFFER : SessionDescription.Type.ANSWER;
@@ -72,34 +83,50 @@ public class VideoCallViewModel extends AndroidViewModel {
         }, String.class, String.class);
 
         hubConnection.on("ReceiveIceCandidate", (senderId, sdp) -> {
+            if (senderId.equals(hubConnection.getConnectionId())) return;
             repository.addIceCandidate(new IceCandidate("0", 0, sdp));
         }, String.class, String.class);
 
-        // ЗАПУСК В ФОНЕ (БЕЗ blockingAwait)
+        hubConnection.onClosed(exception -> {
+            Log.w(TAG, "SignalR Connection Closed");
+        });
+
         hubConnection.start().subscribe(
-                () -> Log.i(TAG, "SignalR Connected"),
+                () -> {
+                    Log.i(TAG, "SignalR Connected. ID: " + hubConnection.getConnectionId());
+                    if (pendingJoin) joinRoom();
+                },
                 throwable -> Log.e(TAG, "SignalR Connection Error: ", throwable)
         );
     }
 
-    public void startVideoCall() {
-        // Инициализируем WebRTC локально
+    public void startVideoCall(String roomId) {
+        this.currentRoomId = roomId;
         repository.initWebRTC();
         repository.setupPeerConnection();
 
-        // Отправляем сигнал на сервер, только если подключение активно
-        if (hubConnection.getConnectionState() == com.microsoft.signalr.HubConnectionState.CONNECTED) {
-            hubConnection.send("JoinCall", "ROOM_1");
+        if (hubConnection.getConnectionState() == HubConnectionState.CONNECTED) {
+            joinRoom();
         } else {
-            Log.e(TAG, "Cannot join call: SignalR not connected");
+            pendingJoin = true;
+        }
+    }
+
+    private void joinRoom() {
+        if (currentRoomId != null) {
+            Log.i(TAG, "Joining room: " + currentRoomId);
+            hubConnection.send("JoinCall", currentRoomId);
+            pendingJoin = false;
         }
     }
 
     private void startCall() {
         repository.createOffer(new SdpObserverAdapter() {
             @Override public void onCreateSuccess(SessionDescription sdp) {
-                repository.setLocalDescription(sdp); // Важно установить локальное описание
-                hubConnection.send("SendSignal", targetId, sdp.description);
+                repository.setLocalDescription(sdp);
+                if (hubConnection.getConnectionState() == HubConnectionState.CONNECTED && targetId != null) {
+                    hubConnection.send("SendSignal", targetId, sdp.description);
+                }
             }
         });
     }
@@ -107,8 +134,10 @@ public class VideoCallViewModel extends AndroidViewModel {
     private void answerCall() {
         repository.createAnswer(new SdpObserverAdapter() {
             @Override public void onCreateSuccess(SessionDescription sdp) {
-                repository.setLocalDescription(sdp); // И здесь тоже
-                hubConnection.send("SendSignal", targetId, sdp.description);
+                repository.setLocalDescription(sdp);
+                if (hubConnection.getConnectionState() == HubConnectionState.CONNECTED && targetId != null) {
+                    hubConnection.send("SendSignal", targetId, sdp.description);
+                }
             }
         });
     }
@@ -123,9 +152,7 @@ public class VideoCallViewModel extends AndroidViewModel {
 
     public void stopVideoCall() {
         repository.dispose();
-        if (hubConnection != null) {
-            hubConnection.stop();
-        }
+        if (hubConnection != null) hubConnection.stop();
     }
 
     private static class SdpObserverAdapter implements SdpObserver {
