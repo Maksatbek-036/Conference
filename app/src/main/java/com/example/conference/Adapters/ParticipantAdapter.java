@@ -17,14 +17,22 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
     private ArrayList<Participant> participants;
     private final EglBase.Context eglContext;
     private final VideoCallRepository repository;
+    private OnItemClickListener clickListener;
 
-    // Конструктор теперь принимает контекст WebRTC и репозиторий
+    public interface OnItemClickListener {
+        void onItemClick();
+    }
+
     public ParticipantAdapter(ArrayList<Participant> participants,
                               EglBase.Context eglContext,
                               VideoCallRepository repository) {
         this.participants = participants;
         this.eglContext = eglContext;
         this.repository = repository;
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.clickListener = listener;
     }
 
     @NonNull
@@ -39,8 +47,13 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
         Participant participant = participants.get(position);
         holder.bind(participant);
 
+        holder.itemView.setOnClickListener(v -> {
+            if (clickListener != null) {
+                clickListener.onItemClick();
+            }
+        });
+
         // Инициализируем SurfaceViewRenderer внутри холдера
-        // videoView должен быть определен в вашем ParticipantViewHolder
         if (holder.videoView != null) {
             holder.videoView.init(eglContext, null);
             holder.videoView.setEnableHardwareScaler(true);
@@ -51,7 +64,6 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
                 repository.setLocalVideoSink(holder.videoView);
             } else {
                 holder.videoView.setMirror(false);
-                // Здесь будет логика для удаленных треков (remoteVideoTrack)
             }
         }
     }
@@ -59,7 +71,6 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
     @Override
     public void onViewRecycled(@NonNull ParticipantViewHolder holder) {
         super.onViewRecycled(holder);
-        // Важно: освобождаем ресурсы при переиспользовании ячейки
         if (holder.videoView != null) {
             holder.videoView.release();
         }
@@ -72,14 +83,8 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
 
     public void setRemoteTrack(VideoTrack videoTrack) {
         if (videoTrack == null) return;
-
-        // Iterate through participants except the first one (local self-view)
         for (int i = 1; i < participants.size(); i++) {
-            Participant participant = participants.get(i);
-
-            // Find the ViewHolder for this participant
             notifyItemChanged(i, videoTrack);
         }
     }
-
 }

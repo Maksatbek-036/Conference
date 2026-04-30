@@ -24,12 +24,13 @@ import java.util.ArrayList;
 public class ChatFragment extends BottomSheetDialogFragment {
 
 FragmentChatBinding binding;
+Cache cache;
 ChatViewModel viewModel;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+cache = new Cache(getContext());
 viewModel= new ViewModelProvider(this).get(ChatViewModel.class);
 
     }
@@ -48,11 +49,8 @@ viewModel= new ViewModelProvider(this).get(ChatViewModel.class);
     }
     private ArrayList<Message> loadMessages() {
         var messages = new ArrayList<Message>();
-        messages.add(new Message("1", "Hello!", "12:00", "1", "1"));
-        messages.add(new Message("2", "Hi!", "12:01", "1", "1"));
-        messages.add(new Message("3", "How are you?", "12:02", "2", "1"));
-        messages.add(new Message("4", "Fine, thanks!", "12:03", "1", "1"));
-    return messages;
+       viewModel.loadMessages(cache.getToken(),"154897");
+          return messages;
     }
     private ArrayList<Participant> loadParticipants() {
         var participants = new ArrayList<Participant>();

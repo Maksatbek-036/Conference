@@ -32,6 +32,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Войти"
+        style="@style/EmeraldButton"
+
+        />
+    <Button
+        android:id="@+id/register_button"
+        app:layout_constraintTop_toBottomOf="@id/sign_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Создать аккаунт"
+        style="@style/Widget.Button.Green"
 
         />
 

@@ -13,10 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ConferenceAdapter extends RecyclerView.Adapter<ConferenceViewHolder>{
-private ArrayList<Conference> conferences=null;
+    private ArrayList<Conference> conferences;
 
     public ConferenceAdapter(ArrayList<Conference> conferences) {
-        this.conferences = conferences;
+        this.conferences = conferences != null ? conferences : new ArrayList<>();
     }
 
     @NonNull
@@ -29,20 +29,22 @@ private ArrayList<Conference> conferences=null;
 
     @Override
     public void onBindViewHolder(@NonNull ConferenceViewHolder holder, int position) {
-    holder.bind(conferences.get(position));
+        holder.bind(conferences.get(position));
     }
 
     @Override
     public int getItemCount() {
-
-        return conferences.size();
+        return conferences != null ? conferences.size() : 0;
     }
 
     public void setConferences(List<Conference> conferences) {
-        this.conferences.clear();
-        if(conferences!=null){
-
-        this.conferences.addAll(conferences);
+        if (this.conferences == null) {
+            this.conferences = new ArrayList<>();
         }
+        this.conferences.clear();
+        if (conferences != null) {
+            this.conferences.addAll(conferences);
+        }
+        notifyDataSetChanged();
     }
 }

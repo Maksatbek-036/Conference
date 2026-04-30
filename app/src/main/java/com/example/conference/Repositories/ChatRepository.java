@@ -21,12 +21,12 @@ public class ChatRepository {
 
     // REST: загрузка истории
     public void getMessages(String token, String confId, Callback<List<Message>> callback) {
-        chatApi.getMessages("Bearer " + token, confId).enqueue(callback);
+        chatApi.getMessages(confId).enqueue(callback);
     }
 
     // REST: удаление сообщения
     public void deleteMessage(String token, String messageId, Callback<Void> callback) {
-        chatApi.deleteMessage("Bearer " + token, messageId).enqueue(callback);
+
     }
 
     // SignalR: старт хаба
@@ -41,8 +41,9 @@ public class ChatRepository {
     public void sendMessage(Message message, String confId) {
         chatHub.sendMessage(message, confId);
     }
-
-    public void subscribeMessages(Action1<Message> handler) {
+public  void subscribeMessages(Action1<Message> handler) {
         chatHub.onMessageReceived(handler);
-    }
+}
+
+
 }

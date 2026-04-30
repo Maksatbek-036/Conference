@@ -9,8 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.conference.ViewModels.ConferenceViewModel;
-import com.example.conference.ViewModels.ConferenceViewModelFactory;
 import com.example.conference.databinding.ActivityScheduleConferenceBinding;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
@@ -19,7 +17,7 @@ import java.util.Locale;
 
 public class ScheduleConference extends BottomSheetDialogFragment {
     private ActivityScheduleConferenceBinding binding;
-    private ConferenceViewModel viewModel;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -33,8 +31,7 @@ public class ScheduleConference extends BottomSheetDialogFragment {
         super.onViewCreated(view, savedInstanceState);
         binding = ActivityScheduleConferenceBinding.bind(view);
 
-        ConferenceViewModelFactory viewModelFactory = new ConferenceViewModelFactory(requireContext());
-        viewModel = new ViewModelProvider(this, viewModelFactory).get(ConferenceViewModel.class);
+
 
         binding.saveConferenceButton.setOnClickListener(v -> {
             String title = binding.conferenceTitle.getText().toString();
@@ -61,7 +58,7 @@ public class ScheduleConference extends BottomSheetDialogFragment {
                 return;
             }
 
-            viewModel.createConference(title, description, dateMillis, startTime, endTime, location, isOnline);
+
             Toast.makeText(getContext(), "Конференция создана", Toast.LENGTH_SHORT).show();
             dismiss();
         });

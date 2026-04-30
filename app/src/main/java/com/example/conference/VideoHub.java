@@ -15,8 +15,6 @@ import com.example.conference.Models.Participant;
 import com.example.conference.ViewModels.VideoCallViewModel;
 import com.example.conference.databinding.ActivityVideoHubBinding;
 
-import org.webrtc.SurfaceViewRenderer;
-
 import java.util.ArrayList;
 
 public class VideoHub extends AppCompatActivity {
@@ -46,11 +44,13 @@ public class VideoHub extends AppCompatActivity {
             requestPermissions(REQUIRED_PERMISSIONS, 100);
         }
 
+        // Вызов BottomFragment при нажатии на фон экрана
+        binding.main.setOnClickListener(v -> showBottomMenu());
+    }
 
-        binding.participantsRecycler.setOnClickListener(v ->  {
-             BottomFragment bottomFragment = new BottomFragment();
-             bottomFragment.show(getSupportFragmentManager(), bottomFragment.getTag());
-        });
+    private void showBottomMenu() {
+        BottomFragment bottomFragment = new BottomFragment();
+        bottomFragment.show(getSupportFragmentManager(), bottomFragment.getTag());
     }
 
     private void initVideoChat() {
@@ -68,6 +68,10 @@ public class VideoHub extends AppCompatActivity {
                 viewModel.getRepository().getEglContext(),
                 viewModel.getRepository()
         );
+        
+        // Вызов BottomFragment при нажатии на любого участника в списке
+        adapter.setOnItemClickListener(this::showBottomMenu);
+
         binding.participantsRecycler.setAdapter(adapter);
 
         viewModel.remoteVideoTrack.observe(this, videoTrack -> {
@@ -85,7 +89,6 @@ public class VideoHub extends AppCompatActivity {
         }
         return true;
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);

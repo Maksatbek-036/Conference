@@ -1,17 +1,10 @@
 package com.example.conference.Repositories;
 
-import android.content.Context;
-import android.util.Log;
-
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-
 import com.example.conference.Api.ConferenceApi;
 import com.example.conference.Api.RetrofitClient;
-import com.example.conference.Cache;
-import com.example.conference.Contracts.CreateConferenceRequest;
 import com.example.conference.Models.Conference;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -20,49 +13,31 @@ import retrofit2.Response;
 
 public class ConferenceRepository {
     private final ConferenceApi api;
-    MutableLiveData<List<Conference>> conferencesLiveData;
-private Cache cache;
-    public ConferenceRepository(Context context, Cache cache) {
-    this.cache=cache;
-        this.api = RetrofitClient.getApi(ConferenceApi.class);
+
+    public interface ConferenceCallback {
+        void onSuccess(List<Conference> conferences);
+        void onError(String message);
     }
 
-    public LiveData<List<Conference>> fetchConferences(String token) {
-     conferencesLiveData = new MutableLiveData<>();
+    public ConferenceRepository(ConferenceApi api) {
+        this.api = api != null ? api : RetrofitClient.getApi(ConferenceApi.class);
+    }
 
-        api.getConferences("Bearer " + token).enqueue(new Callback<List<Conference>>() {
+    public void fetchConferences(ConferenceCallback callback) {
+        api.getConferences().enqueue(new Callback<List<Conference>>() {
             @Override
             public void onResponse(Call<List<Conference>> call, Response<List<Conference>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    conferencesLiveData.setValue(response.body());
+                    callback.onSuccess(response.body());
                 } else {
-                    conferencesLiveData.setValue(null);
+                    callback.onError("Ошибка сервера: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<List<Conference>> call, Throwable t) {
-                conferencesLiveData.setValue(null);
+                callback.onError(t.getMessage());
             }
         });
-
-        return conferencesLiveData;
-    }
-    public void saveConference(String title, String description, long date, String startTime,
-                                String endTime, String location, boolean isOnline) {
-
-      api.createConference("Bearer " + cache.getToken(), new CreateConferenceRequest(title, description, date, startTime, endTime, location, isOnline))
-              .enqueue(new Callback<Conference>() {
-                  @Override
-                  public void onResponse(Call<Conference> call, Response<Conference> response) {
-
-                      Log.d("ConferenceRepository", "Response: " + response.toString());
-                  }
-
-                  @Override
-                  public void onFailure(Call<Conference> call, Throwable t) {
-                      Log.e("ConferenceRepository", "Error: " + t.getMessage());
-                  }
-              });
     }
 }

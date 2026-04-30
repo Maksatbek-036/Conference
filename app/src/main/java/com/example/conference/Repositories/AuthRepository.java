@@ -15,59 +15,64 @@ import retrofit2.Response;
 
 public class AuthRepository {
     private final AuthApi authApi;
+    private String token="";
+    private Boolean result=false;
 
     public AuthRepository() {
         this.authApi = RetrofitClient.getApi(AuthApi.class);
     }
 
     // Логин пользователя — асинхронно
-    public MutableLiveData<String> oauthLogin(LoginUserRequest loginUserRequest) {
-        MutableLiveData<String> tokenLiveData = new MutableLiveData<>();
+    public String oauthLogin(LoginUserRequest loginUserRequest) {
+
 
         authApi.login(loginUserRequest).enqueue(new Callback<String>() {
             @Override
             public void onResponse(Call<String> call, Response<String> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    tokenLiveData.setValue(response.body());
+                   token = response.body();
                     Log.d("AuthRepository", "Token: " + response.body());
                 } else {
-                    tokenLiveData.setValue("");
+                    token="";
                     Log.e("AuthRepository", "Ошибка авторизации: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<String> call, Throwable t) {
-                tokenLiveData.setValue("");
+              token="";
                 Log.e("AuthRepository", "Ошибка сети: " + t.getMessage());
             }
         });
 
-        return tokenLiveData;
+        return token;
     }
 
     // Регистрация пользователя — асинхронно
-    public MutableLiveData<Boolean> authenticateUser(RegisterUserRequest registerUserRequest) {
-        MutableLiveData<Boolean> resultLiveData = new MutableLiveData<>();
+    public Boolean authenticateUser(RegisterUserRequest registerUserRequest) {
+     result = false;
 
         authApi.register(registerUserRequest).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                resultLiveData.setValue(response.isSuccessful());
+
                 if (response.isSuccessful()) {
+                    result = true;
                     Log.d("AuthRepository", "Регистрация успешна");
                 } else {
+                    result=false;
                     Log.e("AuthRepository", "Ошибка регистрации: " + response.code());
                 }
+
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                resultLiveData.setValue(false);
+
                 Log.e("AuthRepository", "Ошибка сети: " + t.getMessage());
             }
         });
 
-        return resultLiveData;
+        return result;
     }
 }

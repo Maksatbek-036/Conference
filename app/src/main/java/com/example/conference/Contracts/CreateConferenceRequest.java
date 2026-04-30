@@ -21,4 +21,7 @@ public class CreateConferenceRequest {
         this.isOnline = isOnline;
     }
 
+    public static CreateConferenceRequest Create(String title, String description, long date, String startTime, String endTime, String location, boolean isOnline) {
+    return new CreateConferenceRequest(title, description, date, startTime, endTime, location, isOnline);
+    }
 }

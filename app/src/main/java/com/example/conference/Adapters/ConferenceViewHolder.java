@@ -2,42 +2,37 @@ package com.example.conference.Adapters;
 
 import android.content.Intent;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.conference.Models.Conference;
-import com.example.conference.Models.Message;
-import com.example.conference.Models.Participant;
-import com.example.conference.R;
 import com.example.conference.VideoHub;
+import com.example.conference.databinding.PlanItemBinding;
 
 public class ConferenceViewHolder extends RecyclerView.ViewHolder {
 
-    TextView title;
-    TextView identifity;
-    TextView date;
-    Button startButton;
+    PlanItemBinding binding;
 
     public ConferenceViewHolder(@NonNull View itemView) {
         super(itemView);
-        title = itemView.findViewById(R.id.list_plans_name);
-        identifity = itemView.findViewById(R.id.list_plans_identifity);
-        date = itemView.findViewById(R.id.list_plans_time);
-        startButton = itemView.findViewById(R.id.start_button);
-        startButton.setOnClickListener(v -> {
-            Intent intent = new Intent(itemView.getContext(), VideoHub.class);
-            itemView.getContext().startActivity(intent);
-        });
+        binding = PlanItemBinding.bind(itemView);
     }
 
     public void bind(Conference conference) {
-        title.setText(conference.getTitles());
-        identifity.setText(conference.getDescription());
-        date.setText(conference.getDate());
+        binding.startButton.setOnClickListener(v -> {
+            // Используем ID конференции как ID комнаты, если он есть
+            String roomId = conference.getId();
+            if (roomId == null || roomId.isEmpty()) {
+                roomId = "ROOM_" + (int)(Math.random() * 9999);
+            }
+            
+            Intent intent = new Intent(itemView.getContext(), VideoHub.class);
+            intent.putExtra("ROOM_ID", roomId);
+            itemView.getContext().startActivity(intent);
+        });
+        
+        binding.listPlansName.setText(conference.getTitles());
+        binding.listPlansTime.setText(conference.getStartTime());
     }
-
-
 }
