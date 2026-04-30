@@ -21,7 +21,8 @@ public class VideoHub extends AppCompatActivity {
     private ActivityVideoHubBinding binding;
     private VideoCallViewModel viewModel;
     private ParticipantAdapter adapter;
-    private String roomId; // Храним ID комнаты
+    private String roomId;
+    private boolean remoteParticipantAdded = false;
 
     private final String[] REQUIRED_PERMISSIONS = {
             Manifest.permission.CAMERA,
@@ -34,7 +35,6 @@ public class VideoHub extends AppCompatActivity {
         binding = ActivityVideoHubBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Получаем ID комнаты из Intent. Если его нет (например, прямая ссылка), ставим дефолт.
         roomId = getIntent().getStringExtra("ROOM_ID");
         if (roomId == null) roomId = "DEFAULT_ROOM";
 
@@ -44,7 +44,6 @@ public class VideoHub extends AppCompatActivity {
             requestPermissions(REQUIRED_PERMISSIONS, 100);
         }
 
-        // Вызов BottomFragment при нажатии на фон экрана
         binding.main.setOnClickListener(v -> showBottomMenu());
     }
 
@@ -55,8 +54,6 @@ public class VideoHub extends AppCompatActivity {
 
     private void initVideoChat() {
         viewModel = new ViewModelProvider(this).get(VideoCallViewModel.class);
-
-        // Передаем roomId в метод старта
         viewModel.startVideoCall(roomId);
 
         binding.participantsRecycler.setLayoutManager(new GridLayoutManager(this, 2));
@@ -69,13 +66,17 @@ public class VideoHub extends AppCompatActivity {
                 viewModel.getRepository()
         );
         
-        // Вызов BottomFragment при нажатии на любого участника в списке
         adapter.setOnItemClickListener(this::showBottomMenu);
-
         binding.participantsRecycler.setAdapter(adapter);
 
         viewModel.remoteVideoTrack.observe(this, videoTrack -> {
             if (videoTrack != null) {
+                // Если мы еще не добавили удаленного участника в список, добавляем его
+                if (!remoteParticipantAdded) {
+                    adapter.addParticipant(new Participant("remote", "Собеседник", null, true, true, 100));
+                    remoteParticipantAdded = true;
+                }
+                // Передаем трек в адаптер для отображения
                 adapter.setRemoteTrack(videoTrack);
             }
         });
@@ -89,13 +90,14 @@ public class VideoHub extends AppCompatActivity {
         }
         return true;
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 100 && allPermissionsGranted()) {
             initVideoChat();
         } else {
-            Toast.makeText(this, "Разрешения камеры и микрофона необходимы для звонка", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Разрешения необходимы", Toast.LENGTH_LONG).show();
             finish();
         }
     }

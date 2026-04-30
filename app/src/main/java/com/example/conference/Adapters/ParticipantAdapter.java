@@ -18,6 +18,7 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
     private final EglBase.Context eglContext;
     private final VideoCallRepository repository;
     private OnItemClickListener clickListener;
+    private VideoTrack remoteVideoTrack;
 
     public interface OnItemClickListener {
         void onItemClick();
@@ -33,6 +34,11 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
 
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.clickListener = listener;
+    }
+
+    public void addParticipant(Participant participant) {
+        participants.add(participant);
+        notifyItemInserted(participants.size() - 1);
     }
 
     @NonNull
@@ -58,12 +64,15 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
             holder.videoView.init(eglContext, null);
             holder.videoView.setEnableHardwareScaler(true);
 
-            // Если это первый элемент — подключаем локальную камеру
             if (position == 0) {
                 holder.videoView.setMirror(true); // Зеркалим себя
                 repository.setLocalVideoSink(holder.videoView);
             } else {
                 holder.videoView.setMirror(false);
+                // Если это удаленный участник и у нас есть трек — подключаем его
+                if (remoteVideoTrack != null) {
+                    remoteVideoTrack.addSink(holder.videoView);
+                }
             }
         }
     }
@@ -72,6 +81,10 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
     public void onViewRecycled(@NonNull ParticipantViewHolder holder) {
         super.onViewRecycled(holder);
         if (holder.videoView != null) {
+            // Перед очисткой отписываемся от треков, если это был удаленный участник
+            if (holder.getBindingAdapterPosition() != 0 && remoteVideoTrack != null) {
+                remoteVideoTrack.removeSink(holder.videoView);
+            }
             holder.videoView.release();
         }
     }
@@ -82,9 +95,12 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
     }
 
     public void setRemoteTrack(VideoTrack videoTrack) {
-        if (videoTrack == null) return;
-        for (int i = 1; i < participants.size(); i++) {
-            notifyItemChanged(i, videoTrack);
+        this.remoteVideoTrack = videoTrack;
+        // Обновляем только удаленных участников (начиная с индекса 1)
+        if (participants.size() > 1) {
+            for (int i = 1; i < participants.size(); i++) {
+                notifyItemChanged(i);
+            }
         }
     }
 }

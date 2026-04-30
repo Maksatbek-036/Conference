@@ -38,8 +38,8 @@ public class ChatRepository {
         chatHub.joinGroup(confId);
     }
 
-    public void sendMessage(Message message, String confId) {
-        chatHub.sendMessage(message, confId);
+    public void sendMessage(Message message) {
+        chatHub.sendMessage(message);
     }
 public  void subscribeMessages(Action1<Message> handler) {
         chatHub.onMessageReceived(handler);

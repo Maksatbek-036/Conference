@@ -9,8 +9,11 @@ import androidx.lifecycle.ViewModel;
 import com.example.conference.Models.Message;
 import com.example.conference.Repositories.ChatRepository;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -43,7 +46,11 @@ public class ChatViewModel extends ViewModel {
             }
         });
     }
-
+public void sendMessage(String messageText, String confId) {
+        var time = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
+        Message message = new Message(null, messageText, time, null,confId);
+        repository.sendMessage(message);
+}
     public void connectHub(String confId) {
         repository.connectHub();
         repository.joinGroup(confId);
