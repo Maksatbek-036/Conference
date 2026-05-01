@@ -6,4 +6,16 @@
     <string name="etc">Eще</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="create_conference">Создание конференции</string>
+    <string name="title_hint">Название</string>
+    <string name="description_hint">Описание</string>
+    <string name="day">День</string>
+    <string name="month">Месяц</string>
+    <string name="year">Год</string>
+    <string name="hour">Час</string>
+    <string name="minute">Мин</string>
+    <string name="location_hint">Место</string>
+    <string name="online_broadcast">Онлайн трансляция</string>
+    <string name="schedule_button">Запланировать</string>
 </resources>

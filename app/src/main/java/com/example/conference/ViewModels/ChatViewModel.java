@@ -38,6 +38,7 @@ public class ChatViewModel extends ViewModel {
                 if (response.isSuccessful() && response.body() != null) {
                     messages.postValue(response.body());
                 }
+
             }
 
             @Override

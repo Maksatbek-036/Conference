@@ -11,6 +11,8 @@ import org.webrtc.EglBase;
 import org.webrtc.VideoTrack;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHolder> {
 
@@ -18,7 +20,7 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
     private final EglBase.Context eglContext;
     private final VideoCallRepository repository;
     private OnItemClickListener clickListener;
-    private VideoTrack remoteVideoTrack;
+    private Map<String, VideoTrack> remoteVideoTracks = new HashMap<>();
 
     public interface OnItemClickListener {
         void onItemClick();
@@ -37,8 +39,25 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
     }
 
     public void addParticipant(Participant participant) {
+        for (Participant p : participants) {
+            if (p.getId().equals(participant.getId())) return;
+        }
         participants.add(participant);
         notifyItemInserted(participants.size() - 1);
+    }
+
+    public void removeParticipant(String userId) {
+        int index = -1;
+        for (int i = 0; i < participants.size(); i++) {
+            if (participants.get(i).getId().equals(userId)) {
+                index = i;
+                break;
+            }
+        }
+        if (index != -1) {
+            participants.remove(index);
+            notifyItemRemoved(index);
+        }
     }
 
     @NonNull
@@ -59,19 +78,22 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
             }
         });
 
-        // Инициализируем SurfaceViewRenderer внутри холдера
         if (holder.videoView != null) {
-            holder.videoView.init(eglContext, null);
-            holder.videoView.setEnableHardwareScaler(true);
+            try {
+                holder.videoView.init(eglContext, null);
+                holder.videoView.setEnableHardwareScaler(true);
+            } catch (Exception e) {
+                // Ignore if already initialized
+            }
 
             if (position == 0) {
-                holder.videoView.setMirror(true); // Зеркалим себя
+                holder.videoView.setMirror(true);
                 repository.setLocalVideoSink(holder.videoView);
             } else {
                 holder.videoView.setMirror(false);
-                // Если это удаленный участник и у нас есть трек — подключаем его
-                if (remoteVideoTrack != null) {
-                    remoteVideoTrack.addSink(holder.videoView);
+                VideoTrack track = remoteVideoTracks.get(participant.getId());
+                if (track != null) {
+                    track.addSink(holder.videoView);
                 }
             }
         }
@@ -81,10 +103,8 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
     public void onViewRecycled(@NonNull ParticipantViewHolder holder) {
         super.onViewRecycled(holder);
         if (holder.videoView != null) {
-            // Перед очисткой отписываемся от треков, если это был удаленный участник
-            if (holder.getBindingAdapterPosition() != 0 && remoteVideoTrack != null) {
-                remoteVideoTrack.removeSink(holder.videoView);
-            }
+            // Important: don't release here if you want to reuse the view properly in a grid
+            // or ensure it's re-initialized in onBind
             holder.videoView.release();
         }
     }
@@ -94,13 +114,8 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
         return participants.size();
     }
 
-    public void setRemoteTrack(VideoTrack videoTrack) {
-        this.remoteVideoTrack = videoTrack;
-        // Обновляем только удаленных участников (начиная с индекса 1)
-        if (participants.size() > 1) {
-            for (int i = 1; i < participants.size(); i++) {
-                notifyItemChanged(i);
-            }
-        }
+    public void setRemoteTracks(Map<String, VideoTrack> tracks) {
+        this.remoteVideoTracks = new HashMap<>(tracks);
+        notifyDataSetChanged();
     }
 }

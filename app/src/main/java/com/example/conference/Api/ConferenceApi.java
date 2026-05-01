@@ -18,4 +18,7 @@ public interface ConferenceApi {
         @GET("api/conference")
         Call<List<Conference>> getConferences();
 
+        @POST("api/conference")
+        Call<Conference> createConference(@Body CreateConferenceRequest request);
+
 }

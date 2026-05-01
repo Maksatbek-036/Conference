@@ -46,7 +46,7 @@ public class RetrofitClient {
                         return chain.proceed(builder.build());
                     })
                     .addInterceptor(logging)
-                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .connectTimeout(15, TimeUnit.SECONDS)
                     .build();
 
             // 4. Сборка Retrofit

@@ -5,106 +5,138 @@ import android.util.Log;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import com.example.conference.Repositories.VideoCallRepository;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.microsoft.signalr.HubConnection;
 import com.microsoft.signalr.HubConnectionBuilder;
 import com.microsoft.signalr.HubConnectionState;
 import org.webrtc.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class VideoCallViewModel extends AndroidViewModel {
     private static final String TAG = "VideoCallViewModel";
     private final VideoCallRepository repository;
     private HubConnection hubConnection;
-    private String targetId;
     private String currentRoomId;
     private boolean pendingJoin = false;
+    private final Gson gson = new Gson();
 
-    public MutableLiveData<VideoTrack> remoteVideoTrack = new MutableLiveData<>();
+    // Map userId to their VideoTrack
+    public MutableLiveData<Map<String, VideoTrack>> remoteTracks = new MutableLiveData<>(new HashMap<>());
 
     public VideoCallViewModel(Application app) {
         super(app);
-
-        PeerConnection.Observer observer = new PeerConnection.Observer() {
+        repository = new VideoCallRepository(app);
+        
+        repository.setMultiPeerObserver(new VideoCallRepository.MultiPeerObserver() {
             @Override
-            public void onIceCandidate(IceCandidate iceCandidate) {
-                // Отправляем ICE-кандидатов только если есть targetId и он не мы сами
-                if (targetId != null && hubConnection != null && hubConnection.getConnectionState() == HubConnectionState.CONNECTED) {
-                    hubConnection.send("SendIceCandidate", targetId, iceCandidate.sdp);
+            public void onIceCandidate(String userId, IceCandidate candidate) {
+                if (hubConnection != null && hubConnection.getConnectionState() == HubConnectionState.CONNECTED) {
+                    JsonObject json = new JsonObject();
+                    json.addProperty("sdp", candidate.sdp);
+                    json.addProperty("sdpMid", candidate.sdpMid);
+                    json.addProperty("sdpMLineIndex", candidate.sdpMLineIndex);
+                    hubConnection.send("SendIceCandidate", userId, json.toString());
                 }
             }
+
             @Override
-            public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
-                if (rtpReceiver.track() instanceof VideoTrack) {
-                    remoteVideoTrack.postValue((VideoTrack) rtpReceiver.track());
+            public void onTrack(String userId, VideoTrack track) {
+                Log.d(TAG, "Received remote track from: " + userId);
+                Map<String, VideoTrack> currentMap = remoteTracks.getValue();
+                if (currentMap != null) {
+                    currentMap.put(userId, track);
+                    remoteTracks.postValue(currentMap);
                 }
             }
-            @Override public void onSignalingChange(PeerConnection.SignalingState s) {}
-            @Override public void onIceConnectionChange(PeerConnection.IceConnectionState s) {}
-            @Override public void onIceConnectionReceivingChange(boolean b) {}
-            @Override public void onIceGatheringChange(PeerConnection.IceGatheringState s) {}
-            @Override public void onIceCandidatesRemoved(IceCandidate[] i) {}
-            @Override public void onAddStream(MediaStream m) {}
-            @Override public void onRemoveStream(MediaStream m) {}
-            @Override public void onDataChannel(DataChannel d) {}
-            @Override public void onRenegotiationNeeded() {}
-        };
 
-        repository = new VideoCallRepository(app, observer);
+            @Override
+            public void onConnectionChange(String userId, PeerConnection.IceConnectionState state) {
+                Log.d(TAG, "Connection state for " + userId + ": " + state);
+                if (state == PeerConnection.IceConnectionState.DISCONNECTED || 
+                    state == PeerConnection.IceConnectionState.FAILED || 
+                    state == PeerConnection.IceConnectionState.CLOSED) {
+                    removeUser(userId);
+                }
+            }
+        });
+
         initSignalR();
+    }
+
+    private void removeUser(String userId) {
+        repository.removePeer(userId);
+        Map<String, VideoTrack> currentMap = remoteTracks.getValue();
+        if (currentMap != null && currentMap.containsKey(userId)) {
+            currentMap.remove(userId);
+            remoteTracks.postValue(currentMap);
+        }
     }
 
     private void initSignalR() {
         String serverUrl = "http://192.168.0.106:5000/hubs/video";
-
         hubConnection = HubConnectionBuilder.create(serverUrl).build();
 
         hubConnection.on("UserJoined", userId -> {
-            // ИГНОРИРУЕМ САМИХ СЕБЯ
-            String myConnectionId = hubConnection.getConnectionId();
-            if (userId.equals(myConnectionId)) {
-                Log.d(TAG, "Joined successfully. My ID: " + userId);
-                return; 
-            }
-
-            Log.d(TAG, "Remote user joined: " + userId);
-            this.targetId = userId;
-            startCall();
+            if (userId.equals(hubConnection.getConnectionId())) return;
+            Log.d(TAG, "New user joined: " + userId);
+            // In Mesh, the new user receives offers from everyone or sends offers to everyone.
+            // Let's make the NEW user send offers to existing users, 
+            // OR existing users send offers to the new user.
+            // Common pattern: existing users send offers to the newcomer.
+            startCallWith(userId);
         }, String.class);
 
-        hubConnection.on("ReceiveSignal", (senderId, sdp) -> {
-            // Игнорируем, если пришло от самих себя (на всякий случай)
-            if (senderId.equals(hubConnection.getConnectionId())) return;
+        hubConnection.on("UserLeft", userId -> {
+            Log.d(TAG, "User left: " + userId);
+            removeUser(userId);
+        }, String.class);
 
+        hubConnection.on("ReceiveSignal", (senderId, signalData) -> {
             Log.d(TAG, "Received signal from: " + senderId);
-            this.targetId = senderId;
-            SessionDescription.Type type = sdp.contains("offer") ?
-                    SessionDescription.Type.OFFER : SessionDescription.Type.ANSWER;
-            repository.setRemoteDescription(new SessionDescription(type, sdp));
-            if (type == SessionDescription.Type.OFFER) answerCall();
+            try {
+                JsonObject json = gson.fromJson(signalData, JsonObject.class);
+                String typeStr = json.get("type").getAsString().toLowerCase();
+                String sdp = json.get("description").getAsString();
+
+                SessionDescription.Type type = typeStr.contains("offer") ? 
+                        SessionDescription.Type.OFFER : SessionDescription.Type.ANSWER;
+                
+                repository.setRemoteDescription(senderId, new SessionDescription(type, sdp));
+
+                if (type == SessionDescription.Type.OFFER) {
+                    answerCallFrom(senderId);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error parsing signal from " + senderId, e);
+            }
         }, String.class, String.class);
 
-        hubConnection.on("ReceiveIceCandidate", (senderId, sdp) -> {
-            if (senderId.equals(hubConnection.getConnectionId())) return;
-            repository.addIceCandidate(new IceCandidate("0", 0, sdp));
+        hubConnection.on("ReceiveIceCandidate", (senderId, candidateData) -> {
+            try {
+                JsonObject json = gson.fromJson(candidateData, JsonObject.class);
+                String sdp = json.get("sdp").getAsString();
+                String sdpMid = json.get("sdpMid").getAsString();
+                int sdpMLineIndex = json.get("sdpMLineIndex").getAsInt();
+                repository.addIceCandidate(senderId, new IceCandidate(sdpMid, sdpMLineIndex, sdp));
+            } catch (Exception e) {
+                Log.e(TAG, "Error parsing candidate from " + senderId, e);
+            }
         }, String.class, String.class);
-
-        hubConnection.onClosed(exception -> {
-            Log.w(TAG, "SignalR Connection Closed");
-        });
 
         hubConnection.start().subscribe(
                 () -> {
-                    Log.i(TAG, "SignalR Connected. ID: " + hubConnection.getConnectionId());
+                    Log.i(TAG, "SignalR Connected");
                     if (pendingJoin) joinRoom();
                 },
-                throwable -> Log.e(TAG, "SignalR Connection Error: ", throwable)
+                throwable -> Log.e(TAG, "SignalR Error", throwable)
         );
     }
 
     public void startVideoCall(String roomId) {
         this.currentRoomId = roomId;
         repository.initWebRTC();
-        repository.setupPeerConnection();
-
         if (hubConnection.getConnectionState() == HubConnectionState.CONNECTED) {
             joinRoom();
         } else {
@@ -114,51 +146,45 @@ public class VideoCallViewModel extends AndroidViewModel {
 
     private void joinRoom() {
         if (currentRoomId != null) {
-            Log.i(TAG, "Joining room: " + currentRoomId);
             hubConnection.send("JoinCall", currentRoomId);
             pendingJoin = false;
         }
     }
 
-    private void startCall() {
-        repository.createOffer(new SdpObserverAdapter() {
+    private void startCallWith(String userId) {
+        repository.createOffer(userId, new SdpObserver() {
             @Override public void onCreateSuccess(SessionDescription sdp) {
-                repository.setLocalDescription(sdp);
-                if (hubConnection.getConnectionState() == HubConnectionState.CONNECTED && targetId != null) {
-                    hubConnection.send("SendSignal", targetId, sdp.description);
-                }
+                repository.setLocalDescription(userId, sdp);
+                JsonObject json = new JsonObject();
+                json.addProperty("type", sdp.type.canonicalForm());
+                json.addProperty("description", sdp.description);
+                hubConnection.send("SendSignal", userId, json.toString());
             }
+            @Override public void onSetSuccess() {}
+            @Override public void onCreateFailure(String s) {}
+            @Override public void onSetFailure(String s) {}
         });
     }
 
-    private void answerCall() {
-        repository.createAnswer(new SdpObserverAdapter() {
+    private void answerCallFrom(String userId) {
+        repository.createAnswer(userId, new SdpObserver() {
             @Override public void onCreateSuccess(SessionDescription sdp) {
-                repository.setLocalDescription(sdp);
-                if (hubConnection.getConnectionState() == HubConnectionState.CONNECTED && targetId != null) {
-                    hubConnection.send("SendSignal", targetId, sdp.description);
-                }
+                repository.setLocalDescription(userId, sdp);
+                JsonObject json = new JsonObject();
+                json.addProperty("type", sdp.type.canonicalForm());
+                json.addProperty("description", sdp.description);
+                hubConnection.send("SendSignal", userId, json.toString());
             }
+            @Override public void onSetSuccess() {}
+            @Override public void onCreateFailure(String s) {}
+            @Override public void onSetFailure(String s) {}
         });
     }
 
     public VideoCallRepository getRepository() { return repository; }
 
-    @Override
-    protected void onCleared() {
-        super.onCleared();
-        stopVideoCall();
-    }
-
     public void stopVideoCall() {
         repository.dispose();
         if (hubConnection != null) hubConnection.stop();
-    }
-
-    private static class SdpObserverAdapter implements SdpObserver {
-        @Override public void onCreateSuccess(SessionDescription sdp) {}
-        @Override public void onSetSuccess() {}
-        @Override public void onCreateFailure(String s) { Log.e(TAG, "SDP Create Failure: " + s); }
-        @Override public void onSetFailure(String s) { Log.e(TAG, "SDP Set Failure: " + s); }
     }
 }

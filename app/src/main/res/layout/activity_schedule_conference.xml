@@ -1,62 +1,176 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="@color/white">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/create_conference"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#1B5E20"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Название -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Название"
+            android:textSize="12sp"
+            android:layout_marginBottom="4dp"
+            android:textColor="#455A64"/>
 
         <EditText
-            style="@style/GreenEditText"
             android:id="@+id/conferenceTitle"
-            android:hint="Название конференции"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:hint="@string/title_hint"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="16dp"
+            android:inputType="textCapSentences" />
+
+        <!-- Описание -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Описание"
+            android:textSize="12sp"
+            android:layout_marginBottom="4dp"
+            android:textColor="#455A64"/>
 
         <EditText
             android:id="@+id/conferenceDescription"
-            android:hint="Описание"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minLines="3"/>
+            android:hint="@string/description_hint"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="16dp"
+            android:gravity="top"
+            android:minLines="3"
+            android:inputType="textMultiLine" />
 
-        <EditText
-            android:id="@+id/conferenceDate"
-            android:hint="Дата (например: 2026-04-25)"
+        <!-- КАРТОЧКА ДАТЫ И ВРЕМЕНИ -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#CCCCCC"
+            app:cardElevation="0dp"
+            android:layout_marginBottom="16dp"
+            >
 
-        <EditText
-            android:id="@+id/conferenceStartTime"
-            android:hint="Время начала (например: 10:00)"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
 
-        <EditText
-            android:id="@+id/conferenceEndTime"
-            android:hint="Время окончания (например: 12:00)"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+                <!-- Дата -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Дата"
+                    android:textSize="12sp"
+                    android:textColor="#1B5E20"
+                    android:textStyle="bold"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="4dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+                    <NumberPicker android:id="@+id/npDay" android:layout_width="0dp" android:layout_height="100dp" android:layout_weight="1" />
+                    <NumberPicker android:id="@+id/npMonth" android:layout_width="0dp" android:layout_height="100dp" android:layout_weight="1" />
+                    <NumberPicker android:id="@+id/npYear" android:layout_width="0dp" android:layout_height="100dp" android:layout_weight="1.2" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_marginVertical="8dp"/>
+
+                <!-- Время начала и конца -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Начало" android:textSize="11sp"/>
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
+                            <NumberPicker android:id="@+id/npStartHour" android:layout_width="45dp" android:layout_height="100dp" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=":"/>
+                            <NumberPicker android:id="@+id/npStartMin" android:layout_width="45dp" android:layout_height="100dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#EEEEEE" android:layout_marginHorizontal="4dp"/>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Конец" android:textSize="11sp"/>
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
+                            <NumberPicker android:id="@+id/npEndHour" android:layout_width="45dp" android:layout_height="100dp" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=":"/>
+                            <NumberPicker android:id="@+id/npEndMin" android:layout_width="45dp" android:layout_height="100dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Место проведения -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Место проведения"
+            android:textSize="12sp"
+            android:layout_marginBottom="4dp"
+            android:textColor="#455A64"/>
 
         <EditText
             android:id="@+id/conferenceLocation"
-            android:hint="Место проведения"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:hint="@string/location_hint"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="16dp"
+            android:inputType="text" />
 
-        <CheckBox
+        <com.google.android.material.checkbox.MaterialCheckBox
             android:id="@+id/conferenceIsOnline"
-            android:text="Онлайн конференция"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:text="@string/online_broadcast"
+            android:layout_marginBottom="24dp"/>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/saveConferenceButton"
-            android:text="Запланировать"
-            style="@style/EmeraldButton"
             android:layout_width="match_parent"
-            android:layout_height="60dp"/>
+            android:layout_height="64dp"
+            android:text="@string/schedule_button"
+            app:cornerRadius="12dp"
+            android:backgroundTint="@color/emerald500" />
+
     </LinearLayout>
-</FrameLayout>
+</ScrollView>

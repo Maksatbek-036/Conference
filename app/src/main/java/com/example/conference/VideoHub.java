@@ -16,13 +16,13 @@ import com.example.conference.ViewModels.VideoCallViewModel;
 import com.example.conference.databinding.ActivityVideoHubBinding;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 public class VideoHub extends AppCompatActivity {
     private ActivityVideoHubBinding binding;
     private VideoCallViewModel viewModel;
     private ParticipantAdapter adapter;
     private String roomId;
-    private boolean remoteParticipantAdded = false;
 
     private final String[] REQUIRED_PERMISSIONS = {
             Manifest.permission.CAMERA,
@@ -54,11 +54,11 @@ public class VideoHub extends AppCompatActivity {
 
     private void initVideoChat() {
         viewModel = new ViewModelProvider(this).get(VideoCallViewModel.class);
-        viewModel.startVideoCall(roomId);
-
+        
         binding.participantsRecycler.setLayoutManager(new GridLayoutManager(this, 2));
         ArrayList<Participant> participants = new ArrayList<>();
-        participants.add(new Participant("me", "Я (Вы)", null, true, true, 100));
+        // Добавляем себя первым
+        participants.add(new Participant("me", "Я (Вы)", null, false, true, System.currentTimeMillis()));
 
         adapter = new ParticipantAdapter(
                 participants,
@@ -69,17 +69,20 @@ public class VideoHub extends AppCompatActivity {
         adapter.setOnItemClickListener(this::showBottomMenu);
         binding.participantsRecycler.setAdapter(adapter);
 
-        viewModel.remoteVideoTrack.observe(this, videoTrack -> {
-            if (videoTrack != null) {
-                // Если мы еще не добавили удаленного участника в список, добавляем его
-                if (!remoteParticipantAdded) {
-                    adapter.addParticipant(new Participant("remote", "Собеседник", null, true, true, 100));
-                    remoteParticipantAdded = true;
+        // Наблюдаем за списком удаленных треков
+        viewModel.remoteTracks.observe(this, tracks -> {
+            if (tracks != null) {
+                // Обновляем список участников на основе полученных треков
+                for (String userId : tracks.keySet()) {
+                    adapter.addParticipant(new Participant(userId, "Участник " + userId.substring(0, 4), null, false, true, System.currentTimeMillis()));
                 }
-                // Передаем трек в адаптер для отображения
-                adapter.setRemoteTrack(videoTrack);
+                
+                // Передаем треки в адаптер
+                adapter.setRemoteTracks(tracks);
             }
         });
+
+        viewModel.startVideoCall(roomId);
     }
 
     private boolean allPermissionsGranted() {

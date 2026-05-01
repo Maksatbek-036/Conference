@@ -5,26 +5,39 @@ import android.util.Log;
 import org.webrtc.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class VideoCallRepository {
     private static final String TAG = "WebRTC_Repo";
     private final Context context;
     private PeerConnectionFactory factory;
-    private PeerConnection peerConnection;
     private final EglBase eglBase;
-    private final PeerConnection.Observer observer;
-
+    
+    private final Map<String, PeerConnection> peerConnections = new HashMap<>();
+    
     private VideoCapturer videoCapturer;
     private VideoSource videoSource;
     private VideoTrack localVideoTrack;
-    private AudioTrack localAudioTrack; // Добавлено аудио
+    private AudioTrack localAudioTrack;
     private SurfaceTextureHelper surfaceTextureHelper;
 
-    public VideoCallRepository(Context context, PeerConnection.Observer observer) {
+    public interface MultiPeerObserver {
+        void onIceCandidate(String userId, IceCandidate candidate);
+        void onTrack(String userId, VideoTrack track);
+        void onConnectionChange(String userId, PeerConnection.IceConnectionState state);
+    }
+
+    private MultiPeerObserver multiPeerObserver;
+
+    public VideoCallRepository(Context context) {
         this.context = context.getApplicationContext();
-        this.observer = observer;
         this.eglBase = EglBase.create();
+    }
+
+    public void setMultiPeerObserver(MultiPeerObserver observer) {
+        this.multiPeerObserver = observer;
     }
 
     public void initWebRTC() {
@@ -34,7 +47,6 @@ public class VideoCallRepository {
                 .createInitializationOptions();
         PeerConnectionFactory.initialize(options);
 
-        // Настройка кодеков (Hardware Acceleration)
         VideoEncoderFactory encoderFactory = new DefaultVideoEncoderFactory(eglBase.getEglBaseContext(), true, true);
         VideoDecoderFactory decoderFactory = new DefaultVideoDecoderFactory(eglBase.getEglBaseContext());
 
@@ -44,37 +56,7 @@ public class VideoCallRepository {
                 .createPeerConnectionFactory();
 
         startCameraCapture();
-        startAudioCapture(); // Запуск микрофона
-    }
-    // Добавьте этот метод в VideoCallRepository.java
-    public void joinCall(SessionDescription remoteOffer, SdpObserver sdpObserver) {
-        if (peerConnection == null) setupPeerConnection();
-
-        // 1. Устанавливаем удаленный Offer
-        peerConnection.setRemoteDescription(new SimpleSdpObserver() {
-            @Override
-            public void onSetSuccess() {
-                // 2. Только после успеха установки создаем Answer
-                peerConnection.createAnswer(new SimpleSdpObserver() {
-                    @Override
-                    public void onCreateSuccess(SessionDescription localAnswer) {
-                        // 3. Устанавливаем свой Answer как Local Description
-                        peerConnection.setLocalDescription(new SimpleSdpObserver() {
-                            @Override
-                            public void onSetSuccess() {
-                                // 4. Сообщаем ViewModel, что всё готово для отправки
-                                sdpObserver.onCreateSuccess(localAnswer);
-                            }
-                        }, localAnswer);
-                    }
-                }, new MediaConstraints());
-            }
-
-            @Override
-            public void onSetFailure(String s) {
-                sdpObserver.onSetFailure(s);
-            }
-        }, remoteOffer);
+        startAudioCapture();
     }
 
     private void startAudioCapture() {
@@ -98,61 +80,98 @@ public class VideoCallRepository {
         surfaceTextureHelper = SurfaceTextureHelper.create("CaptureThread", eglBase.getEglBaseContext());
         videoSource = factory.createVideoSource(videoCapturer.isScreencast());
         videoCapturer.initialize(surfaceTextureHelper, context, videoSource.getCapturerObserver());
-
-        // Оптимальное разрешение для мобильной связи
         videoCapturer.startCapture(640, 480, 30);
 
         localVideoTrack = factory.createVideoTrack("LOCAL_VIDEO", videoSource);
     }
 
-    public void setupPeerConnection() {
+    public PeerConnection getOrCreatePeerConnection(String userId) {
+        if (peerConnections.containsKey(userId)) {
+            return peerConnections.get(userId);
+        }
+
         List<PeerConnection.IceServer> iceServers = new ArrayList<>();
-        // STUN сервера Google
         iceServers.add(PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer());
         iceServers.add(PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302").createIceServer());
 
         PeerConnection.RTCConfiguration rtcConfig = new PeerConnection.RTCConfiguration(iceServers);
         rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
 
-        peerConnection = factory.createPeerConnection(rtcConfig, observer);
+        PeerConnection pc = factory.createPeerConnection(rtcConfig, new PeerConnection.Observer() {
+            @Override
+            public void onIceCandidate(IceCandidate iceCandidate) {
+                if (multiPeerObserver != null) multiPeerObserver.onIceCandidate(userId, iceCandidate);
+            }
 
-        // Добавляем и видео, и аудио в соединение
-        if (localVideoTrack != null) peerConnection.addTrack(localVideoTrack, Collections.singletonList("STREAM"));
-        if (localAudioTrack != null) peerConnection.addTrack(localAudioTrack, Collections.singletonList("STREAM"));
+            @Override
+            public void onTrack(RtpTransceiver transceiver) {
+                MediaStreamTrack track = transceiver.getReceiver().track();
+                if (track instanceof VideoTrack && multiPeerObserver != null) {
+                    Log.d(TAG, "onTrack (transceiver) from " + userId);
+                    multiPeerObserver.onTrack(userId, (VideoTrack) track);
+                }
+            }
+
+            @Override
+            public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
+                MediaStreamTrack track = rtpReceiver.track();
+                if (track instanceof VideoTrack && multiPeerObserver != null) {
+                    Log.d(TAG, "onAddTrack from " + userId);
+                    multiPeerObserver.onTrack(userId, (VideoTrack) track);
+                }
+            }
+
+            @Override public void onSignalingChange(PeerConnection.SignalingState signalingState) {}
+            @Override
+            public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
+                Log.d(TAG, "ICE State for " + userId + ": " + iceConnectionState);
+                if (multiPeerObserver != null) multiPeerObserver.onConnectionChange(userId, iceConnectionState);
+            }
+            @Override public void onIceConnectionReceivingChange(boolean b) {}
+            @Override public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {}
+            @Override public void onIceCandidatesRemoved(IceCandidate[] iceCandidates) {}
+            @Override public void onAddStream(MediaStream mediaStream) {}
+            @Override public void onRemoveStream(MediaStream mediaStream) {}
+            @Override public void onDataChannel(DataChannel dataChannel) {}
+            @Override public void onRenegotiationNeeded() {}
+        });
+
+        if (localVideoTrack != null) pc.addTrack(localVideoTrack, Collections.singletonList("STREAM"));
+        if (localAudioTrack != null) pc.addTrack(localAudioTrack, Collections.singletonList("STREAM"));
+
+        peerConnections.put(userId, pc);
+        return pc;
     }
 
-    public void createOffer(SdpObserver sdpObserver) {
+    public void createOffer(String userId, SdpObserver sdpObserver) {
+        PeerConnection pc = getOrCreatePeerConnection(userId);
         MediaConstraints constraints = new MediaConstraints();
         constraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
         constraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
-
-        peerConnection.createOffer(sdpObserver, constraints);
+        pc.createOffer(sdpObserver, constraints);
     }
 
-    public void createAnswer(SdpObserver sdpObserver) {
+    public void createAnswer(String userId, SdpObserver sdpObserver) {
+        PeerConnection pc = getOrCreatePeerConnection(userId);
         MediaConstraints constraints = new MediaConstraints();
         constraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
         constraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
-
-        peerConnection.createAnswer(sdpObserver, constraints);
+        pc.createAnswer(sdpObserver, constraints);
     }
 
-    public void setLocalDescription(SessionDescription sdp) {
-        if (peerConnection != null) {
-            peerConnection.setLocalDescription(new SimpleSdpObserver(), sdp);
-        }
+    public void setLocalDescription(String userId, SessionDescription sdp) {
+        PeerConnection pc = peerConnections.get(userId);
+        if (pc != null) pc.setLocalDescription(new SimpleSdpObserver(), sdp);
     }
 
-    public void setRemoteDescription(SessionDescription sdp) {
-        if (peerConnection != null) {
-            peerConnection.setRemoteDescription(new SimpleSdpObserver(), sdp);
-        }
+    public void setRemoteDescription(String userId, SessionDescription sdp) {
+        PeerConnection pc = getOrCreatePeerConnection(userId);
+        pc.setRemoteDescription(new SimpleSdpObserver(), sdp);
     }
 
-    public void addIceCandidate(IceCandidate candidate) {
-        if (peerConnection != null) {
-            peerConnection.addIceCandidate(candidate);
-        }
+    public void addIceCandidate(String userId, IceCandidate candidate) {
+        PeerConnection pc = peerConnections.get(userId);
+        if (pc != null) pc.addIceCandidate(candidate);
     }
 
     public void setLocalVideoSink(VideoSink sink) {
@@ -163,6 +182,13 @@ public class VideoCallRepository {
         return eglBase.getEglBaseContext();
     }
 
+    public void removePeer(String userId) {
+        PeerConnection pc = peerConnections.remove(userId);
+        if (pc != null) {
+            pc.dispose();
+        }
+    }
+
     public void dispose() {
         try {
             if (videoCapturer != null) {
@@ -170,7 +196,10 @@ public class VideoCallRepository {
                 videoCapturer.dispose();
             }
             if (surfaceTextureHelper != null) surfaceTextureHelper.dispose();
-            if (peerConnection != null) peerConnection.dispose();
+            for (PeerConnection pc : peerConnections.values()) {
+                pc.dispose();
+            }
+            peerConnections.clear();
             if (factory != null) factory.dispose();
             eglBase.release();
         } catch (Exception e) {

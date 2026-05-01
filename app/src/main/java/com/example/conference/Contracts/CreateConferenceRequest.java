@@ -1,16 +1,25 @@
 package com.example.conference.Contracts;
 
+import com.google.gson.annotations.SerializedName;
+
 public class CreateConferenceRequest {
-    private  String startTime;
-    private  String endTime;
+    @SerializedName("title")
     private String title;
+    @SerializedName("description")
     private String description;
-    private long date; // timestamp
+    @SerializedName("date")
+    private String date; // timestamp
+    @SerializedName("startTime")
+    private  String startTime;
+    @SerializedName("endTime")
+    private  String endTime;
+    @SerializedName("location")
     private String location;
+    @SerializedName("isOnline")
     private boolean isOnline;
 
     public CreateConferenceRequest(String title, String description,
-                                   long date, String startTime, String endTime,
+                                   String date, String startTime, String endTime,
                                    String location, boolean isOnline) {
         this.title = title;
         this.description = description;
@@ -21,7 +30,7 @@ public class CreateConferenceRequest {
         this.isOnline = isOnline;
     }
 
-    public static CreateConferenceRequest Create(String title, String description, long date, String startTime, String endTime, String location, boolean isOnline) {
+    public static CreateConferenceRequest Create(String title, String description, String date, String startTime, String endTime, String location, boolean isOnline) {
     return new CreateConferenceRequest(title, description, date, startTime, endTime, location, isOnline);
     }
 }

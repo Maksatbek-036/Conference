@@ -36,6 +36,7 @@ public class AuthRepository {
                     token="";
                     Log.e("AuthRepository", "Ошибка авторизации: " + response.code());
                 }
+
             }
 
             @Override
@@ -63,6 +64,7 @@ public class AuthRepository {
                     result=false;
                     Log.e("AuthRepository", "Ошибка регистрации: " + response.code());
                 }
+
 
             }
 
