@@ -152,6 +152,10 @@ public class VideoCallViewModel extends AndroidViewModel {
         isAudioEnabled.postValue(enabled);
     }
 
+    public void switchCamera() {
+        repository.switchCamera();
+    }
+
     private void joinRoom() {
         if (currentRoomId != null) {
             hubConnection.send("JoinCall", currentRoomId);

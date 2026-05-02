@@ -61,7 +61,9 @@ public class BottomFragment extends BottomSheetDialogFragment {
             new ParticipantFragment().show(getParentFragmentManager(), TAG_PARTICIPANTS);
             dismiss();
         });
-
+        binding.swapScreenButton.setOnClickListener(v -> {
+            viewModel.switchCamera();
+        });
         binding.callEndButton.setOnClickListener(v -> {
             // Сначала останавливаем звонок
             viewModel.stopVideoCall();

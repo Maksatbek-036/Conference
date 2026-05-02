@@ -85,6 +85,13 @@ public class VideoCallRepository {
         localVideoTrack = factory.createVideoTrack("LOCAL_VIDEO", videoSource);
     }
 
+    public void switchCamera() {
+        if (videoCapturer instanceof CameraVideoCapturer) {
+            CameraVideoCapturer cameraVideoCapturer = (CameraVideoCapturer) videoCapturer;
+            cameraVideoCapturer.switchCamera(null);
+        }
+    }
+
     public boolean toggleVideo() {
         if (localVideoTrack != null) {
             boolean newState = !localVideoTrack.enabled();
