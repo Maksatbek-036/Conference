@@ -42,6 +42,7 @@ public class AuthActivity extends AppCompatActivity {
         });
         binding.registerButton.setOnClickListener(v -> {
             startActivity(new Intent(this, RegisterActivity.class));
+
         });
     }
 }

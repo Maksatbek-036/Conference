@@ -2,6 +2,7 @@ package com.example.conference;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -34,6 +35,7 @@ public class MainScreen extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         cache = new Cache(this);
+        Log.d("MainScreen", "Token: " + JWTDecoder.decodedPayload(cache.getToken()));
 
 
         // Настройка RecyclerView

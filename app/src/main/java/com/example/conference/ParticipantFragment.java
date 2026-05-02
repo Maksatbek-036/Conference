@@ -18,6 +18,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import java.util.ArrayList;
 
 public class ParticipantFragment extends BottomSheetDialogFragment {
+    Cache cache;
 
     FragmentParticipantBinding binding;
     ArrayList<Participant> participants=  new ArrayList<>();
@@ -30,8 +31,7 @@ public class ParticipantFragment extends BottomSheetDialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-
+        cache= new Cache(getContext());
         binding=FragmentParticipantBinding.inflate(inflater,container,false);
         binding.participantRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.participantRecycler.setAdapter(new ParticipantFragAdapter(participants));
