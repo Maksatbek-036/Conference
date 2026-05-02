@@ -24,6 +24,8 @@ public class VideoCallViewModel extends AndroidViewModel {
 
     // Map userId to their VideoTrack
     public MutableLiveData<Map<String, VideoTrack>> remoteTracks = new MutableLiveData<>(new HashMap<>());
+    public MutableLiveData<Boolean> isVideoEnabled = new MutableLiveData<>(true);
+    public MutableLiveData<Boolean> isAudioEnabled = new MutableLiveData<>(true);
 
     public VideoCallViewModel(Application app) {
         super(app);
@@ -81,10 +83,6 @@ public class VideoCallViewModel extends AndroidViewModel {
         hubConnection.on("UserJoined", userId -> {
             if (userId.equals(hubConnection.getConnectionId())) return;
             Log.d(TAG, "New user joined: " + userId);
-            // In Mesh, the new user receives offers from everyone or sends offers to everyone.
-            // Let's make the NEW user send offers to existing users, 
-            // OR existing users send offers to the new user.
-            // Common pattern: existing users send offers to the newcomer.
             startCallWith(userId);
         }, String.class);
 
@@ -142,6 +140,16 @@ public class VideoCallViewModel extends AndroidViewModel {
         } else {
             pendingJoin = true;
         }
+    }
+
+    public void toggleVideo() {
+        boolean enabled = repository.toggleVideo();
+        isVideoEnabled.postValue(enabled);
+    }
+
+    public void toggleAudio() {
+        boolean enabled = repository.toggleAudio();
+        isAudioEnabled.postValue(enabled);
     }
 
     private void joinRoom() {

@@ -30,6 +30,28 @@ public class BottomFragment extends BottomSheetDialogFragment {
         // Получаем общую ViewModel уровня Activity
         viewModel = new ViewModelProvider(requireActivity()).get(VideoCallViewModel.class);
 
+        // Наблюдаем за состоянием видео для обновления UI
+        viewModel.isVideoEnabled.observe(getViewLifecycleOwner(), isEnabled -> {
+            if (isEnabled) {
+                binding.videoButton.setImageResource(R.drawable.iconstack_io____video_camera_);
+                binding.videoButton.setBackgroundResource(R.drawable.icon_form_circle);
+            } else {
+                binding.videoButton.setImageResource(R.drawable.iconstack_io____video_camera_);
+                binding.videoButton.setBackgroundResource(R.drawable.icon_form_circle_red);
+            }
+        });
+
+        // Наблюдаем за состоянием микрофона для обновления UI
+        viewModel.isAudioEnabled.observe(getViewLifecycleOwner(), isEnabled -> {
+            if (isEnabled) {
+                binding.microButton.setImageResource(R.drawable.iconstack_io____mic_);
+                binding.microButton.setBackgroundResource(R.drawable.icon_form_circle);
+            } else {
+                binding.microButton.setImageResource(R.drawable.iconstack_io____mic_off_);
+                binding.microButton.setBackgroundResource(R.drawable.icon_form_circle_red);
+            }
+        });
+
         binding.chatButton.setOnClickListener(v -> {
             new ChatFragment().show(getParentFragmentManager(), TAG_CHAT);
             dismiss();
@@ -46,8 +68,15 @@ public class BottomFragment extends BottomSheetDialogFragment {
             dismiss();
 
             // Завершаем работу Activity.
-            // Используем requireActivity(), так как фрагмент в этот момент точно прикреплен.
             requireActivity().finish();
+        });
+
+        binding.microButton.setOnClickListener(v -> {
+            viewModel.toggleAudio();
+        });
+
+        binding.videoButton.setOnClickListener(v -> {
+            viewModel.toggleVideo();
         });
 
         return binding.getRoot();

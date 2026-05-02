@@ -85,6 +85,24 @@ public class VideoCallRepository {
         localVideoTrack = factory.createVideoTrack("LOCAL_VIDEO", videoSource);
     }
 
+    public boolean toggleVideo() {
+        if (localVideoTrack != null) {
+            boolean newState = !localVideoTrack.enabled();
+            localVideoTrack.setEnabled(newState);
+            return newState;
+        }
+        return false;
+    }
+
+    public boolean toggleAudio() {
+        if (localAudioTrack != null) {
+            boolean newState = !localAudioTrack.enabled();
+            localAudioTrack.setEnabled(newState);
+            return newState;
+        }
+        return false;
+    }
+
     public PeerConnection getOrCreatePeerConnection(String userId) {
         if (peerConnections.containsKey(userId)) {
             return peerConnections.get(userId);

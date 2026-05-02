@@ -17,6 +17,7 @@
      android:layout_width="match_parent"
      >
      <ImageButton
+         android:id="@+id/micro_button"
          android:layout_width="60dp"
          android:layout_height="60dp"
          android:background="@drawable/icons_form_circle"
@@ -24,6 +25,7 @@
          />
 
      <ImageButton
+         android:id="@+id/video_button"
          android:layout_marginHorizontal="15dp"
          android:layout_width="60dp"
          android:layout_height="60dp"
