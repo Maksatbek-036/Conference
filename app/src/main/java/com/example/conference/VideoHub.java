@@ -23,6 +23,7 @@ public class VideoHub extends AppCompatActivity {
     private VideoCallViewModel viewModel;
     private ParticipantAdapter adapter;
     private String roomId;
+    private Cache cache;
 
     private final String[] REQUIRED_PERMISSIONS = {
             Manifest.permission.CAMERA,
@@ -34,7 +35,7 @@ public class VideoHub extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityVideoHubBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
+cache=new Cache(this);
         roomId = getIntent().getStringExtra("ROOM_ID");
         if (roomId == null) roomId = "DEFAULT_ROOM";
 
@@ -58,7 +59,7 @@ public class VideoHub extends AppCompatActivity {
         binding.participantsRecycler.setLayoutManager(new GridLayoutManager(this, 2));
         ArrayList<Participant> participants = new ArrayList<>();
         // Добавляем себя первым
-        participants.add(new Participant("me", "Я (Вы)", null, false, true, System.currentTimeMillis()));
+        participants.add(new Participant(cache.getUserId(), cache.getUserName(),cache.getAvatarUrl(), false, true, System.currentTimeMillis()));
 
         adapter = new ParticipantAdapter(
                 participants,

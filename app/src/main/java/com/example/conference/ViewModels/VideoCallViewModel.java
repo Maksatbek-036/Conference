@@ -196,7 +196,29 @@ public class VideoCallViewModel extends AndroidViewModel {
     public VideoCallRepository getRepository() { return repository; }
 
     public void stopVideoCall() {
-        repository.dispose();
-        if (hubConnection != null) hubConnection.stop();
+        // Run cleanup in a background thread to prevent UI freeze
+        // WebRTC's stopCapture and SignalR's stop can be blocking/slow.
+        new Thread(() -> {
+            try {
+                if (hubConnection != null && hubConnection.getConnectionState() == HubConnectionState.CONNECTED && currentRoomId != null) {
+                    hubConnection.send("LeaveCall", currentRoomId);
+                }
+                repository.dispose();
+                if (hubConnection != null) {
+                    hubConnection.stop().subscribe(
+                            () -> Log.i(TAG, "SignalR stopped successfully"),
+                            throwable -> Log.e(TAG, "Error stopping SignalR", throwable)
+                    );
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error during stopVideoCall", e);
+            }
+        }).start();
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        stopVideoCall();
     }
 }

@@ -2,14 +2,17 @@ package com.example.conference;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.conference.Api.AuthApi;
 import com.example.conference.Api.RetrofitClient;
+import com.example.conference.Models.JWTPayload;
 import com.example.conference.ViewModels.AuthViewModel;
 import com.example.conference.databinding.ActivityAuthBinding;
+import com.google.gson.Gson;
 
 public class AuthActivity extends AppCompatActivity {
     private AuthViewModel viewModel;
@@ -33,6 +36,18 @@ public class AuthActivity extends AppCompatActivity {
 
             // вызываем login → обновляется LiveData
             viewModel.login(email, password);
+            var token=viewModel.getToken();
+
+            String json = JWTDecoder.decodedPayload(token);
+
+            if (json != null) {
+                JWTPayload payload = new Gson().fromJson(json, JWTPayload.class);
+
+                // Пример использования
+                cache.saveUserInfo(payload);
+                String username = payload.getName();
+                Log.d("AUTH", "Добро пожаловать, " + username);
+            }
 
             cache.saveToken(viewModel.getToken());
             if(cache.getToken()!=null){

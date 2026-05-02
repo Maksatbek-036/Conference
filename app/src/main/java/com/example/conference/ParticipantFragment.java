@@ -6,6 +6,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.conference.Adapters.ParticipantAdapter;
@@ -25,13 +27,13 @@ public class ParticipantFragment extends BottomSheetDialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        cache = new Cache(requireContext());
         loadParticipants();
 
     }
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        cache= new Cache(getContext());
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         binding=FragmentParticipantBinding.inflate(inflater,container,false);
         binding.participantRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.participantRecycler.setAdapter(new ParticipantFragAdapter(participants));
@@ -39,7 +41,8 @@ public class ParticipantFragment extends BottomSheetDialogFragment {
 
     }
     private void loadParticipants() {
-        participants.add(new Participant("id1", "User 1", "url", true, true, 100));
-        participants.add(new Participant("id2", "User 2", "url", true, true, 200));
+        participants.add(new Participant(cache.getUserId(),"Я (Вы)",null,false,true,System.currentTimeMillis()));
+
+
     }
 }
