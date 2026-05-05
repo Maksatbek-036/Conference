@@ -34,7 +34,7 @@ public class MainScreen extends AppCompatActivity {
         binding = ActivityMainScreenBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        cache = new Cache(this);
+        cache = new Cache(getApplicationContext());
         Log.d("MainScreen", "Token: " + JWTDecoder.decodedPayload(cache.getToken()));
 
 

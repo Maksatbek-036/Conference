@@ -1,5 +1,6 @@
 package com.example.conference.Repositories;
 
+import android.annotation.SuppressLint;
 import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
@@ -39,6 +40,7 @@ public class AuthRepository {
 
             }
 
+            @SuppressLint("SuspiciousIndentation")
             @Override
             public void onFailure(Call<String> call, Throwable t) {
               token="";

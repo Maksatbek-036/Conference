@@ -27,9 +27,13 @@ public class AuthActivity extends AppCompatActivity {
         binding = ActivityAuthBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        AuthApi authApi = RetrofitClient.getApi(AuthApi.class);
-        viewModel = new AuthViewModel();
 
+
+        viewModel = new AuthViewModel();
+if(cache.getToken()!=null){
+    startActivity(new Intent(this, MainScreen.class));
+    finish();
+}
         binding.signButton.setOnClickListener(v -> {
             String email = binding.email.getText().toString();
             String password = binding.password.getText().toString();

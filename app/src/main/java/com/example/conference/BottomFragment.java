@@ -18,7 +18,7 @@ public class BottomFragment extends BottomSheetDialogFragment {
     private BottomBinding binding;
     private VideoCallViewModel viewModel;
 
-    // Константы для тегов
+
     private static final String TAG_CHAT = "CHAT_DIALOG";
     private static final String TAG_PARTICIPANTS = "PARTICIPANTS_DIALOG";
 

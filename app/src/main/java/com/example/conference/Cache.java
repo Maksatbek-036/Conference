@@ -12,9 +12,15 @@ public class Cache {
     public static final String USER_NAME = "user_name";
     public static final String USER_EMAIL = "user_email";
     public static final String AVATAR_URL = "avatar_url";
+    private static Context context;
 
     public Cache(Context context) {
         sharedPreferences = context.getSharedPreferences("cache", Context.MODE_PRIVATE);
+        this.context=context;
+    }
+
+    public static Cache getInstance() {
+        return  new Cache(context);
     }
 
     public void saveToken(String token) {

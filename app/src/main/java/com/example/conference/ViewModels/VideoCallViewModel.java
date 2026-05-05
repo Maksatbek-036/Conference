@@ -22,7 +22,6 @@ public class VideoCallViewModel extends AndroidViewModel {
     private boolean pendingJoin = false;
     private final Gson gson = new Gson();
 
-    // Map userId to their VideoTrack
     public MutableLiveData<Map<String, VideoTrack>> remoteTracks = new MutableLiveData<>(new HashMap<>());
     public MutableLiveData<Boolean> isVideoEnabled = new MutableLiveData<>(true);
     public MutableLiveData<Boolean> isAudioEnabled = new MutableLiveData<>(true);
@@ -80,8 +79,8 @@ public class VideoCallViewModel extends AndroidViewModel {
         String serverUrl = "http://192.168.0.106:5000/hubs/video";
         hubConnection = HubConnectionBuilder.create(serverUrl).build();
 
-        hubConnection.on("UserJoined", userId -> {
-            if (userId.equals(hubConnection.getConnectionId())) return;
+        hubConnection.on("UserJoined", (userId) -> {
+            if (userId == null || userId.equals(hubConnection.getConnectionId())) return;
             Log.d(TAG, "New user joined: " + userId);
             startCallWith(userId);
         }, String.class);
@@ -142,6 +141,10 @@ public class VideoCallViewModel extends AndroidViewModel {
         }
     }
 
+    public String getCurrentRoomId() {
+        return currentRoomId;
+    }
+
     public void toggleVideo() {
         boolean enabled = repository.toggleVideo();
         isVideoEnabled.postValue(enabled);
@@ -196,8 +199,6 @@ public class VideoCallViewModel extends AndroidViewModel {
     public VideoCallRepository getRepository() { return repository; }
 
     public void stopVideoCall() {
-        // Run cleanup in a background thread to prevent UI freeze
-        // WebRTC's stopCapture and SignalR's stop can be blocking/slow.
         new Thread(() -> {
             try {
                 if (hubConnection != null && hubConnection.getConnectionState() == HubConnectionState.CONNECTED && currentRoomId != null) {

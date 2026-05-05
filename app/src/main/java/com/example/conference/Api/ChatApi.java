@@ -19,9 +19,6 @@ public interface ChatApi {
     @GET("api/chat/{confId}/messages")
     Call<List<Message>> getMessages(@Path("confId") String confId);
 
-    // Отправить новое сообщение
-    @POST("api/chat/send")
-    Call<Message> sendMessage(@Body SendMessageRequest request);
 
     // Удалить сообщение
     @DELETE("api/chat/message/{id}")
