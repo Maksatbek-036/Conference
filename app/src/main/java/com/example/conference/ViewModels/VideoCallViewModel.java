@@ -19,6 +19,7 @@ public class VideoCallViewModel extends AndroidViewModel {
     private final VideoCallRepository repository;
     private HubConnection hubConnection;
     private String currentRoomId;
+
     private boolean pendingJoin = false;
     private final Gson gson = new Gson();
 

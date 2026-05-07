@@ -22,6 +22,17 @@ public class Conference {
 
     @SerializedName("location")
     private String location;
+    @SerializedName("code")
+    private String code;
+
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
 
     public String getId() {
         return id;

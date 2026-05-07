@@ -41,7 +41,7 @@ public class ChatViewModel {
         }, String.class);
     }
 
-    @SuppressLint("CheckResult")
+
     public void start() {
         if (hubConnection.getConnectionState() == HubConnectionState.DISCONNECTED) {
             hubConnection.start().subscribe(() -> {
@@ -84,4 +84,6 @@ public class ChatViewModel {
             hubConnection.stop();
         }
     }
+
+
 }

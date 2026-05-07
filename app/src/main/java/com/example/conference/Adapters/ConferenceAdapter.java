@@ -8,16 +8,22 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.conference.Contracts.ConferenceResponce;
 import com.example.conference.Models.Conference;
+import com.example.conference.Models.Participant;
 import com.example.conference.R;
+import com.example.conference.Repositories.ConferenceRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ConferenceAdapter extends RecyclerView.Adapter<ConferenceViewHolder>{
     private ArrayList<ConferenceResponce> conferences;
+    ConferenceRepository repository;
+    private String userId;
 
-    public ConferenceAdapter(ArrayList<ConferenceResponce> conferences) {
+    public ConferenceAdapter(ArrayList<ConferenceResponce> conferences, ConferenceRepository repository,String userId) {
         this.conferences = conferences != null ? conferences : new ArrayList<>();
+        this.repository = repository;
+        this.userId = userId;
     }
 
     @NonNull
@@ -30,7 +36,8 @@ public class ConferenceAdapter extends RecyclerView.Adapter<ConferenceViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull ConferenceViewHolder holder, int position) {
-        holder.bind(conferences.get(position));
+
+        holder.bind(conferences.get(position), repository,userId);
     }
 
     @Override
@@ -48,4 +55,5 @@ public class ConferenceAdapter extends RecyclerView.Adapter<ConferenceViewHolder
         }
         notifyDataSetChanged();
     }
+
 }

@@ -34,7 +34,7 @@ public class ChatFragment extends BottomSheetDialogFragment {
     private VideoCallViewModel videoCallVM;
     private ChatViewModel chatViewModel;
     private MessageAdapter messageAdapter;
-
+    private String conferenceId;
     private ArrayList<Participant> participantList;
     private Cache cache;
     private ChatRepository chatRepository;
@@ -44,8 +44,8 @@ public class ChatFragment extends BottomSheetDialogFragment {
         super.onCreate(savedInstanceState);
         cache = new Cache(requireContext());
         participantList = new ArrayList<>();
-        chatRepository = new ChatRepository(cache.getToken());
-
+        chatRepository = new ChatRepository();
+        conferenceId = ((VideoHub) requireActivity()).getConferenceId();
         videoCallVM = new ViewModelProvider(requireActivity()).get(VideoCallViewModel.class);
         chatViewModel = ((VideoHub) requireActivity()).getChatViewModel();
 
@@ -53,15 +53,7 @@ public class ChatFragment extends BottomSheetDialogFragment {
                 Toast.makeText(requireContext(), "User joined: " + userId, Toast.LENGTH_SHORT).show()
         );
 
-        // Добавляем текущего пользователя в список участников
-        participantList.add(new Participant(
-                cache.getUserId(),
-                cache.getUserName(),
-                cache.getAvatarUrl(),
-                false,
-                true,
-                System.currentTimeMillis()
-        ));
+        chatViewModel.start();
     }
 
     @Override
@@ -86,8 +78,12 @@ public class ChatFragment extends BottomSheetDialogFragment {
     private void observeRealtimeMessages() {
         chatViewModel.setOnMessagesUpdated(msgs -> {
             messageAdapter.updateMessages(msgs);
-            binding.chatRecycler.scrollToPosition(msgs.size() - 1);
+            if (!msgs.isEmpty()) {
+                binding.chatRecycler.scrollToPosition(msgs.size() - 1);
+            }
+            messageAdapter.notifyDataSetChanged();
         });
+
     }
 
     private void setupClickListeners() {
@@ -106,7 +102,7 @@ public class ChatFragment extends BottomSheetDialogFragment {
     }
 
     private void getMessageAtRest() {
-        chatRepository.getMessages(videoCallVM.getCurrentRoomId(), new Callback<List<Message>>() {
+        chatRepository.getMessages(conferenceId, new Callback<List<Message>>() {
             @Override
             public void onResponse(Call<List<Message>> call, Response<List<Message>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -140,10 +136,12 @@ public class ChatFragment extends BottomSheetDialogFragment {
                         ));
                     }
                 }
-                messageAdapter.notifyDataSetChanged();
+                // обновляем участников в адаптере
+                messageAdapter.updateParticipants(participantList);
             }
         });
     }
+
 
     @Override
     public void onDestroyView() {

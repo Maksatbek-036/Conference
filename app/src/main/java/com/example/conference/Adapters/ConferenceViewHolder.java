@@ -1,12 +1,14 @@
 package com.example.conference.Adapters;
 
 import android.content.Intent;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.conference.Contracts.ConferenceResponce;
+import com.example.conference.Repositories.ConferenceRepository;
 import com.example.conference.VideoHub;
 import com.example.conference.databinding.PlanItemBinding;
 
@@ -21,16 +23,19 @@ public class ConferenceViewHolder extends RecyclerView.ViewHolder {
         binding = PlanItemBinding.bind(itemView);
     }
 
-    public void bind(@UnknownNullability ConferenceResponce conference) {
+    public void bind(@UnknownNullability ConferenceResponce conference, ConferenceRepository repository,String userId) {
         binding.startButton.setOnClickListener(v -> {
             // Используем ID конференции как ID комнаты, если он есть
-            String roomId = conference.getId();
-            if (roomId == null || roomId.isEmpty()) {
-                roomId = "ROOM_" + (int)(Math.random() * 9999);
-            }
-            
+            String roomId = conference.getCode();
+            String conferenceid=conference.getId();
+
+            repository.joinConferenceByCode(roomId,userId );
+            Log.d("RoomID", "Room ID: " + roomId);
+            Log.d("ConferenceID", "Conference ID: " + conferenceid);
+
             Intent intent = new Intent(itemView.getContext(), VideoHub.class);
             intent.putExtra("ROOM_ID", roomId);
+            intent.putExtra("CONFERENCE_ID", conferenceid);
             itemView.getContext().startActivity(intent);
         });
         

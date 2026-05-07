@@ -20,6 +20,7 @@ public class ConferenceResponce {
     @SerializedName("startTime")
     private String startTime;
 
+
     public String getId() {
         return id;
     }
@@ -81,4 +82,14 @@ public class ConferenceResponce {
 
     @SerializedName("location")
     private String location;
+    @SerializedName("code")
+    private String code;
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
 }

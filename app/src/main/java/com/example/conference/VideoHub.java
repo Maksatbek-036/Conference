@@ -10,12 +10,16 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.example.conference.Adapters.ParticipantAdapter;
+import com.example.conference.Api.ConferenceApi;
+import com.example.conference.Api.RetrofitClient;
 import com.example.conference.Models.Participant;
+import com.example.conference.Repositories.ConferenceRepository;
 import com.example.conference.ViewModels.ChatViewModel;
 import com.example.conference.ViewModels.VideoCallViewModel;
 import com.example.conference.databinding.ActivityVideoHubBinding;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
@@ -23,10 +27,12 @@ public class VideoHub extends AppCompatActivity {
     private ActivityVideoHubBinding binding;
     private VideoCallViewModel viewModel;
     private ChatViewModel chatViewModel;
-    private final CompositeDisposable disposables = new CompositeDisposable();
-
+    private ConferenceRepository repository;
+    ConferenceApi api;
+    private ArrayList<Participant> participants = new ArrayList<>();
     private ParticipantAdapter adapter;
     private String roomId;
+    private String conferenceId;
     private Cache cache;
 
     public static final String CHAT_HUB_URL = "http://192.168.0.106:5000";
@@ -41,19 +47,22 @@ public class VideoHub extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityVideoHubBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
+        api = RetrofitClient.getApi(ConferenceApi.class);
         cache = new Cache(this);
+        repository = new ConferenceRepository(api);
 
         roomId = getIntent().getStringExtra("ROOM_ID");
+        conferenceId = getIntent().getStringExtra("CONFERENCE_ID");
         if (roomId == null) roomId = "DEFAULT_ROOM";
 
         if (allPermissionsGranted()) {
             initVideoChat();
-            connectToChat(); // создаём ChatViewModel один раз
+            connectToChat();
+            loadParticipants(); // создаём ChatViewModel один раз
         } else {
             requestPermissions(REQUIRED_PERMISSIONS, 100);
         }
-
+        binding.idRoom.setText("Комната: " + roomId);
         binding.main.setOnClickListener(v -> showBottomMenu());
     }
 
@@ -67,11 +76,14 @@ public class VideoHub extends AppCompatActivity {
     public ChatViewModel getChatViewModel() {
         return chatViewModel;
     }
+
     private void initVideoChat() {
         viewModel = new ViewModelProvider(this).get(VideoCallViewModel.class);
 
         binding.participantsRecycler.setLayoutManager(new GridLayoutManager(this, 2));
-        ArrayList<Participant> participants = new ArrayList<>();
+        
+        // Используем поле класса, а не создаем локальную переменную
+        participants.clear();
         participants.add(new Participant(
                 cache.getUserId(),
                 cache.getUserName(),
@@ -116,6 +128,7 @@ public class VideoHub extends AppCompatActivity {
             if (allPermissionsGranted()) {
                 initVideoChat();
                 connectToChat();
+                loadParticipants();
             }
         }
     }
@@ -138,5 +151,32 @@ public class VideoHub extends AppCompatActivity {
     protected void onDestroy() {
         if (viewModel != null) viewModel.stopVideoCall();
         super.onDestroy();
+    }
+
+    private void loadParticipants() {
+        // Используем roomId напрямую вместо viewModel.getCurrentRoomId()
+        if (conferenceId != null) {
+            repository.getParticipants(conferenceId, new ConferenceRepository.ParticipantsCallback() {
+                @Override
+                public void onSuccess(List<Participant> loadedParticipants) {
+                    runOnUiThread(() -> {
+                        if (loadedParticipants != null) {
+                            for (Participant p : loadedParticipants) {
+                                adapter.addParticipant(p);
+                            }
+                        }
+                    });
+                }
+
+                @Override
+                public void onError(String message) {
+                    // Handle error
+                }
+            });
+        }
+    }
+
+    public String getConferenceId() {
+        return conferenceId;
     }
 }
