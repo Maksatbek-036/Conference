@@ -11,7 +11,11 @@ import com.example.conference.Models.Participant;
 import com.example.conference.R;
 import com.example.conference.databinding.MessageItemBinding;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 public class MessageViewHolder extends RecyclerView.ViewHolder {
     private final MessageItemBinding binding;
@@ -42,8 +46,10 @@ public class MessageViewHolder extends RecyclerView.ViewHolder {
         binding.senderName.setText(isMine ? "Вы" : (sender != null ? sender.getName() : "Гость"));
         // Устанавливаем текст сообщения
         binding.messageText.setText(message.getContent());
-        // Устанавливаем время
-        binding.timeStamp.setText(message.getTimestamp());
+        
+        // Устанавливаем время (исправлено: обработка строкового таймстампа)
+      binding.timeStamp.setText(message.getTimestamp());
+
 
         // Настройка выравнивания и фона
         LinearLayout root = (LinearLayout) binding.getRoot();

@@ -3,6 +3,11 @@ package com.example.conference.Contracts;
 import com.google.gson.annotations.SerializedName;
 
 public class CreateConferenceRequest {
+    @SerializedName("userId")
+    private String userId;
+
+
+
     @SerializedName("title")
     private String title;
     @SerializedName("description")
@@ -18,9 +23,10 @@ public class CreateConferenceRequest {
     @SerializedName("isOnline")
     private boolean isOnline;
 
-    public CreateConferenceRequest(String title, String description,
+    public CreateConferenceRequest(String userId,String title, String description,
                                    String date, String startTime, String endTime,
                                    String location, boolean isOnline) {
+        this.userId = userId;
         this.title = title;
         this.description = description;
         this.date = date;
@@ -30,7 +36,7 @@ public class CreateConferenceRequest {
         this.isOnline = isOnline;
     }
 
-    public static CreateConferenceRequest Create(String title, String description, String date, String startTime, String endTime, String location, boolean isOnline) {
-    return new CreateConferenceRequest(title, description, date, startTime, endTime, location, isOnline);
+    public static CreateConferenceRequest Create(String userId,String title, String description, String date, String startTime, String endTime, String location, boolean isOnline) {
+    return new CreateConferenceRequest(userId,title, description, date, startTime, endTime, location, isOnline);
     }
 }

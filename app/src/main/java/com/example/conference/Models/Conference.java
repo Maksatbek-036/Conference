@@ -2,6 +2,8 @@ package com.example.conference.Models;
 
 import com.google.gson.annotations.SerializedName;
 public class Conference {
+    @SerializedName("userId")
+    private String userId;
     @SerializedName("id") // Проверьте, Id или id на бэкенде
     private String id;
 

@@ -1,66 +1,31 @@
 package com.example.conference.Contracts;
 
 import com.example.conference.Models.Participant;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
 public class ConferenceResponce {
+    @SerializedName("id") // Проверьте, Id или id на бэкенде
     private String id;
+
+    @SerializedName("title") // Скорее всего на бэкенде 'title', а не 'titles'
     private String titles;
+
+    @SerializedName("description")
     private String description;
-    private long date; // timestamp
-    private String location;
-    private boolean isOnline;
 
-    public ConferenceResponce(String id, String titles, String description, long date, String location, boolean isOnline, List<Participant> participants) {
+    @SerializedName("date")
+    private String date; // Мы уже договорились, что это String
+    @SerializedName("startTime")
+    private String startTime;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
         this.id = id;
-        this.titles = titles;
-        this.description = description;
-        this.date = date;
-        this.location = location;
-        this.isOnline = isOnline;
-
-        this.participants = participants;
-    }
-
-    public List<Participant> getParticipants() {
-        return participants;
-    }
-
-    public void setParticipants(List<Participant> participants) {
-        this.participants = participants;
-    }
-
-    public boolean isOnline() {
-        return isOnline;
-    }
-
-    public void setOnline(boolean online) {
-        isOnline = online;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    public long getDate() {
-        return date;
-    }
-
-    public void setDate(long date) {
-        this.date = date;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public String getTitles() {
@@ -71,15 +36,49 @@ public class ConferenceResponce {
         this.titles = titles;
     }
 
-    public String getId() {
-        return id;
+    public String getDescription() {
+        return description;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
+    public String getDate() {
+        return date;
+    }
 
-    private List<Participant> participants;
+    public void setDate(String date) {
+        this.date = date;
+    }
 
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    @SerializedName("endTime")
+    private String endTime;
+
+    @SerializedName("location")
+    private String location;
 }

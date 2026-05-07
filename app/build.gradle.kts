@@ -49,7 +49,7 @@ dependencies {
     implementation("io.github.webrtc-sdk:android:144.7559.04")
     
     // SignalR
-    implementation("com.microsoft.signalr:signalr:10.0.7")
+    implementation("com.microsoft.signalr:signalr:8.0.0")
     implementation("org.slf4j:slf4j-android:1.7.36") // Добавлено для логов SignalR
     
     // Network

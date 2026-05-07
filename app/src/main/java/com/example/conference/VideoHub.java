@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -48,7 +49,7 @@ public class VideoHub extends AppCompatActivity {
 
         if (allPermissionsGranted()) {
             initVideoChat();
-            connectToChat(); // подключаем чат сразу
+            connectToChat(); // создаём ChatViewModel один раз
         } else {
             requestPermissions(REQUIRED_PERMISSIONS, 100);
         }
@@ -57,16 +58,15 @@ public class VideoHub extends AppCompatActivity {
     }
 
     private void connectToChat() {
-        // Используем фабрику для передачи baseUrl
-
-        ChatViewModel.ChatViewModelFactory factory =
-                new ChatViewModel.ChatViewModelFactory(CHAT_HUB_URL);
-        chatViewModel = new ViewModelProvider(this, factory).get(ChatViewModel.class);
-
+        chatViewModel = new ChatViewModel(CHAT_HUB_URL);
         chatViewModel.start();
         chatViewModel.joinGroup(roomId);
     }
 
+    // 👉 Геттер для ChatViewModel
+    public ChatViewModel getChatViewModel() {
+        return chatViewModel;
+    }
     private void initVideoChat() {
         viewModel = new ViewModelProvider(this).get(VideoCallViewModel.class);
 
@@ -107,6 +107,17 @@ public class VideoHub extends AppCompatActivity {
         });
 
         viewModel.startVideoCall(roomId);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 100) {
+            if (allPermissionsGranted()) {
+                initVideoChat();
+                connectToChat();
+            }
+        }
     }
 
     private void showBottomMenu() {

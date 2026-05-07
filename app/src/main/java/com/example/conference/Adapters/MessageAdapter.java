@@ -11,16 +11,16 @@ import com.example.conference.Models.Participant;
 import com.example.conference.R;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageViewHolder> {
-    private ArrayList<Message> messages;
-    private ArrayList<Participant> participantMap; // Было ArrayList
-    private String currentUserId;
+    private final ArrayList<Message> messages;
+    private final ArrayList<Participant> participants;
+    private final String currentUserId;
 
-    public MessageAdapter(ArrayList<Message> messages, ArrayList<Participant> participantMap, String currentUserId) {
+    public MessageAdapter(ArrayList<Message> messages, ArrayList<Participant> participants, String currentUserId) {
         this.messages = messages;
-        this.participantMap = participantMap;
+        this.participants = participants;
         this.currentUserId = currentUserId;
     }
 
@@ -33,13 +33,24 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
-        holder.bind(participantMap, messages.get(position),currentUserId);
+        holder.bind(participants, messages.get(position), currentUserId);
     }
 
     @Override
     public int getItemCount() {
-        return messages != null ? messages.size() : 0;
+        return messages.size();
     }
 
+    // Добавление одного сообщения
+    public void addMessage(Message message) {
+        messages.add(message);
+        notifyItemInserted(messages.size() - 1);
+    }
 
+    // Обновление всего списка
+    public void updateMessages(List<Message> newMessages) {
+        messages.clear();
+        messages.addAll(newMessages);
+        notifyDataSetChanged(); // обязательно!
+    }
 }

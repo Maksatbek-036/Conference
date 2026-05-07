@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.conference.Contracts.ConferenceResponce;
 import com.example.conference.Models.Conference;
 import com.example.conference.R;
 
@@ -13,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ConferenceAdapter extends RecyclerView.Adapter<ConferenceViewHolder>{
-    private ArrayList<Conference> conferences;
+    private ArrayList<ConferenceResponce> conferences;
 
-    public ConferenceAdapter(ArrayList<Conference> conferences) {
+    public ConferenceAdapter(ArrayList<ConferenceResponce> conferences) {
         this.conferences = conferences != null ? conferences : new ArrayList<>();
     }
 
@@ -37,7 +38,7 @@ public class ConferenceAdapter extends RecyclerView.Adapter<ConferenceViewHolder
         return conferences != null ? conferences.size() : 0;
     }
 
-    public void setConferences(List<Conference> conferences) {
+    public void setConferences(List<ConferenceResponce> conferences) {
         if (this.conferences == null) {
             this.conferences = new ArrayList<>();
         }

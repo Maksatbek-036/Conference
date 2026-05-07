@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,8 +24,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -35,59 +34,63 @@ public class ChatFragment extends BottomSheetDialogFragment {
     private VideoCallViewModel videoCallVM;
     private ChatViewModel chatViewModel;
     private MessageAdapter messageAdapter;
-    private final CompositeDisposable disposable = new CompositeDisposable();
-    private final ArrayList<Message> messageList = new ArrayList<>();
-    private final ArrayList<Participant> participantList = new ArrayList<>();
-    private ChatRepository  chatRepository;
 
+    private ArrayList<Participant> participantList;
     private Cache cache;
+    private ChatRepository chatRepository;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         cache = new Cache(requireContext());
+        participantList = new ArrayList<>();
+        chatRepository = new ChatRepository(cache.getToken());
 
         videoCallVM = new ViewModelProvider(requireActivity()).get(VideoCallViewModel.class);
+        chatViewModel = ((VideoHub) requireActivity()).getChatViewModel();
 
-        // Фабрика для ChatViewModel
-        ChatViewModel.ChatViewModelFactory factory =
-                new ChatViewModel.ChatViewModelFactory(VideoHub.CHAT_HUB_URL);
-        chatViewModel = new ViewModelProvider(requireActivity(), factory).get(ChatViewModel.class);
-    chatRepository=new ChatRepository(cache.getToken());
+        chatViewModel.setOnUserJoined(userId ->
+                Toast.makeText(requireContext(), "User joined: " + userId, Toast.LENGTH_SHORT).show()
+        );
+
         // Добавляем текущего пользователя в список участников
-        if (participantList.isEmpty()) {
-            participantList.add(new Participant(
-                    cache.getUserId(),
-                    cache.getUserName(),
-                    cache.getAvatarUrl(),
-                    false,
-                    true,
-                    System.currentTimeMillis()
-            ));
-        }
-
-
+        participantList.add(new Participant(
+                cache.getUserId(),
+                cache.getUserName(),
+                cache.getAvatarUrl(),
+                false,
+                true,
+                System.currentTimeMillis()
+        ));
     }
 
-    @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         binding = FragmentChatBinding.inflate(inflater, container, false);
-        observeMessages();
-        return binding.getRoot();
-    }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        messageAdapter = new MessageAdapter(messageList, participantList, cache.getUserId());
+        // создаём адаптер с пустым списком
+        messageAdapter = new MessageAdapter(new ArrayList<>(), participantList, cache.getUserId());
         binding.chatRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.chatRecycler.setAdapter(messageAdapter);
 
-        // Отправка сообщения
+        setupClickListeners();
+        observeRemoteParticipants();
+        observeRealtimeMessages();
+        getMessageAtRest(); // загрузка истории
+
+        return binding.getRoot();
+    }
+
+    private void observeRealtimeMessages() {
+        chatViewModel.setOnMessagesUpdated(msgs -> {
+            messageAdapter.updateMessages(msgs);
+            binding.chatRecycler.scrollToPosition(msgs.size() - 1);
+        });
+    }
+
+    private void setupClickListeners() {
         binding.sendButton.setOnClickListener(v -> {
             String messageContent = binding.messageEdit.getText().toString().trim();
             if (!messageContent.isEmpty()) {
@@ -96,22 +99,37 @@ public class ChatFragment extends BottomSheetDialogFragment {
                         cache.getUserId(),
                         videoCallVM.getCurrentRoomId()
                 );
-                chatViewModel.sendMessage(message); // исправлено: передаём объект
-                messageAdapter.notifyDataSetChanged();
-
+                chatViewModel.sendMessage(message);
                 binding.messageEdit.setText("");
             }
         });
+    }
 
+    private void getMessageAtRest() {
+        chatRepository.getMessages(videoCallVM.getCurrentRoomId(), new Callback<List<Message>>() {
+            @Override
+            public void onResponse(Call<List<Message>> call, Response<List<Message>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    messageAdapter.updateMessages(response.body());
+                } else {
+                    Log.d("ChatFragment", "Нет данных");
+                }
+            }
 
-        // Наблюдение за участниками
+            @Override
+            public void onFailure(Call<List<Message>> call, Throwable t) {
+                Log.e("ChatFragment", "Ошибка загрузки истории", t);
+            }
+        });
+    }
+
+    private void observeRemoteParticipants() {
         videoCallVM.remoteTracks.observe(getViewLifecycleOwner(), tracks -> {
             if (tracks != null) {
-                boolean changed = false;
                 for (String userId : tracks.keySet()) {
-                    boolean exists = participantList.stream()
+                    boolean alreadyExists = participantList.stream()
                             .anyMatch(p -> p.getId().equals(userId));
-                    if (!exists) {
+                    if (!alreadyExists) {
                         participantList.add(new Participant(
                                 userId,
                                 "Участник " + userId.substring(0, Math.min(userId.length(), 4)),
@@ -120,60 +138,17 @@ public class ChatFragment extends BottomSheetDialogFragment {
                                 true,
                                 System.currentTimeMillis()
                         ));
-                        changed = true;
                     }
                 }
-                if (changed) {
-                    messageAdapter.notifyDataSetChanged();
-                }
+                messageAdapter.notifyDataSetChanged();
             }
         });
-
-        loadMessages();
-    }
-
-    private void loadMessages() {
-       chatRepository.getMessages(videoCallVM.getCurrentRoomId(), new Callback<List<Message>>() {
-           @Override
-           public void onResponse(Call<List<Message>> call, Response<List<Message>> response) {
-               messageList.addAll(response.body());
-               messageAdapter.notifyDataSetChanged();
-               if(response.isSuccessful()){
-                   Log.d("dddd","all good");
-               }
-           }
-
-           @Override
-           public void onFailure(Call<List<Message>> call, Throwable t) {
-
-           }
-       });
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        disposable.clear();
         binding = null;
         messageAdapter = null;
-    }
-    private void observeMessages() {
-        disposable.add(chatViewModel.getMessagesObservable()
-                .observeOn(AndroidSchedulers.mainThread()) // Переходим в UI поток
-                .subscribe(newMessages -> {
-                    // Очищаем старый список и добавляем все актуальные сообщения
-                    messageList.clear();
-                    messageList.addAll(newMessages);
-
-                    // Уведомляем адаптер
-                    messageAdapter.notifyDataSetChanged();
-
-                    // Авто-скролл вниз при получении нового сообщения
-                    if (messageList.size() > 0) {
-                        binding.chatRecycler.scrollToPosition(messageList.size() - 1);
-                    }
-                }, throwable -> {
-                    Log.e("ChatFragment", "Ошибка при получении списка сообщений", throwable);
-                }));
     }
 }

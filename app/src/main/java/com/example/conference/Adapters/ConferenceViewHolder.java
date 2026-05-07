@@ -6,9 +6,11 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.conference.Models.Conference;
+import com.example.conference.Contracts.ConferenceResponce;
 import com.example.conference.VideoHub;
 import com.example.conference.databinding.PlanItemBinding;
+
+import org.jetbrains.annotations.UnknownNullability;
 
 public class ConferenceViewHolder extends RecyclerView.ViewHolder {
 
@@ -19,7 +21,7 @@ public class ConferenceViewHolder extends RecyclerView.ViewHolder {
         binding = PlanItemBinding.bind(itemView);
     }
 
-    public void bind(Conference conference) {
+    public void bind(@UnknownNullability ConferenceResponce conference) {
         binding.startButton.setOnClickListener(v -> {
             // Используем ID конференции как ID комнаты, если он есть
             String roomId = conference.getId();

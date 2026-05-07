@@ -24,12 +24,14 @@ public class ScheduleConference extends BottomSheetDialogFragment {
     private ActivityScheduleConferenceBinding binding;
     private ConferenceRepository conferenceRepository;
     private ConferenceApi api;
+    private Cache cache;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = ActivityScheduleConferenceBinding.inflate(inflater, container, false);
         return binding.getRoot();
+
     }
 
     @Override
@@ -37,7 +39,7 @@ public class ScheduleConference extends BottomSheetDialogFragment {
         super.onViewCreated(view, savedInstanceState);
         api = RetrofitClient.getApi(ConferenceApi.class);
         conferenceRepository = new ConferenceRepository(api);
-
+        cache = new Cache(requireContext());
         // Настройка всех барабанов
         setupAllPickers();
 
@@ -131,7 +133,7 @@ public class ScheduleConference extends BottomSheetDialogFragment {
         boolean isOnline = binding.conferenceIsOnline.isChecked();
 
         // Отправляем в репозиторий с использованием callback
-        conferenceRepository.createConference(title, description, location, date, startTime, endTime, isOnline, new ConferenceRepository.CreateCallback() {
+        conferenceRepository.createConference(cache.getUserId(),title, description, location, date, startTime, endTime, isOnline, new ConferenceRepository.CreateCallback() {
             @Override
             public void onSuccess(Conference conference) {
                 if (getContext() != null) {
