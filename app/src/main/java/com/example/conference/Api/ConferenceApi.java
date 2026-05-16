@@ -23,7 +23,7 @@ public interface ConferenceApi {
         @GET("api/conference")
         Call<List<ConferenceResponce>> getConferences(@Query("userId") String userId);
         @POST("api/conference/joinByCode")
-        Call<ResponseBody> joinConferenceByCode(
+        Call<ConferenceResponce> joinConferenceByCode(
                 @Query("code") String code,
                 @Query("userId") String userId
         );

@@ -67,6 +67,8 @@ public class BottomFragment extends BottomSheetDialogFragment {
         binding.callEndButton.setOnClickListener(v -> {
             // Сначала останавливаем звонок
             viewModel.stopVideoCall();
+
+
             dismiss();
 
             // Завершаем работу Activity.
@@ -88,5 +90,6 @@ public class BottomFragment extends BottomSheetDialogFragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+        viewModel = null;
     }
 }

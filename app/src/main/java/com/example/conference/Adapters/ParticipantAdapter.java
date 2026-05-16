@@ -12,6 +12,7 @@ import org.webrtc.VideoTrack;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHolder> {
@@ -44,6 +45,16 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
         }
         participants.add(participant);
         notifyItemInserted(participants.size() - 1);
+    }
+
+    public void syncParticipants(List<String> activeIds) {
+        for (int i = participants.size() - 1; i >= 0; i--) {
+            Participant p = participants.get(i);
+            if (!activeIds.contains(p.getId())) {
+                participants.remove(i);
+                notifyItemRemoved(i);
+            }
+        }
     }
 
     public void removeParticipant(String userId) {
@@ -103,8 +114,6 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantViewHold
     public void onViewRecycled(@NonNull ParticipantViewHolder holder) {
         super.onViewRecycled(holder);
         if (holder.videoView != null) {
-            // Important: don't release here if you want to reuse the view properly in a grid
-            // or ensure it's re-initialized in onBind
             holder.videoView.release();
         }
     }

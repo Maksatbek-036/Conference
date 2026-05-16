@@ -29,7 +29,18 @@ public class ConferenceViewHolder extends RecyclerView.ViewHolder {
             String roomId = conference.getCode();
             String conferenceid=conference.getId();
 
-            repository.joinConferenceByCode(roomId,userId );
+            repository.joinConferenceByCode(roomId,userId,new ConferenceRepository.JoinCallback() {
+                @Override
+                public void onSuccess(ConferenceResponce conference) {
+                    Log.d("RoomID", "Room ID: " + conference.getCode());
+                    Log.d("ConferenceID", "Conference ID: " + conference.getId());
+                }
+
+                @Override
+                public void onError(String message) {
+                    Log.e("ConferenceRepository", "Ошибка при присоединении: " + message);
+                }
+            } );
             Log.d("RoomID", "Room ID: " + roomId);
             Log.d("ConferenceID", "Conference ID: " + conferenceid);
 

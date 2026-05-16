@@ -3,6 +3,7 @@ package com.example.conference;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,18 +22,15 @@ import com.example.conference.databinding.ActivityVideoHubBinding;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.rxjava3.disposables.CompositeDisposable;
-
 public class VideoHub extends AppCompatActivity {
     private ActivityVideoHubBinding binding;
     private VideoCallViewModel viewModel;
     private ChatViewModel chatViewModel;
     private ConferenceRepository repository;
-    ConferenceApi api;
     private ArrayList<Participant> participants = new ArrayList<>();
     private ParticipantAdapter adapter;
-    private String roomId;
-    private String conferenceId;
+    private String roomId; // Короткий код для SignalR (например, "2874")
+    private String conferenceId; // GUID для API (например, "4543db1d-...")
     private Cache cache;
 
     public static final String CHAT_HUB_URL = "http://192.168.0.106:5000";
@@ -47,21 +45,28 @@ public class VideoHub extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityVideoHubBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        api = RetrofitClient.getApi(ConferenceApi.class);
+
+        ConferenceApi api = RetrofitClient.getApi(ConferenceApi.class);
         cache = new Cache(this);
         repository = new ConferenceRepository(api);
 
+        // Получаем оба ID из интента
         roomId = getIntent().getStringExtra("ROOM_ID");
         conferenceId = getIntent().getStringExtra("CONFERENCE_ID");
+
         if (roomId == null) roomId = "DEFAULT_ROOM";
+        // Если GUID не пришел, используем roomId как запасной вариант для API
+        if (conferenceId == null) conferenceId = roomId;
 
         if (allPermissionsGranted()) {
             initVideoChat();
             connectToChat();
-            loadParticipants(); // создаём ChatViewModel один раз
+            loadParticipants();
         } else {
             requestPermissions(REQUIRED_PERMISSIONS, 100);
         }
+
+        // В UI показываем короткий номер комнаты
         binding.idRoom.setText("Комната: " + roomId);
         binding.main.setOnClickListener(v -> showBottomMenu());
     }
@@ -69,20 +74,15 @@ public class VideoHub extends AppCompatActivity {
     private void connectToChat() {
         chatViewModel = new ChatViewModel(CHAT_HUB_URL);
         chatViewModel.start();
+        // Используем roomId для SignalR чата
         chatViewModel.joinGroup(roomId);
-    }
-
-    // 👉 Геттер для ChatViewModel
-    public ChatViewModel getChatViewModel() {
-        return chatViewModel;
     }
 
     private void initVideoChat() {
         viewModel = new ViewModelProvider(this).get(VideoCallViewModel.class);
 
         binding.participantsRecycler.setLayoutManager(new GridLayoutManager(this, 2));
-        
-        // Используем поле класса, а не создаем локальную переменную
+
         participants.clear();
         participants.add(new Participant(
                 cache.getUserId(),
@@ -104,6 +104,10 @@ public class VideoHub extends AppCompatActivity {
 
         viewModel.remoteTracks.observe(this, tracks -> {
             if (tracks != null) {
+                List<String> activeIds = new ArrayList<>(tracks.keySet());
+                activeIds.add(cache.getUserId());
+                adapter.syncParticipants(activeIds);
+
                 for (String userId : tracks.keySet()) {
                     adapter.addParticipant(new Participant(
                             userId,
@@ -118,7 +122,31 @@ public class VideoHub extends AppCompatActivity {
             }
         });
 
+        // Используем roomId для SignalR видеозвонка
         viewModel.startVideoCall(roomId);
+    }
+
+    private void loadParticipants() {
+        // GUID по-прежнему нужен для запроса списка участников через API
+        if (conferenceId != null) {
+            repository.getParticipants(conferenceId, new ConferenceRepository.ParticipantsCallback() {
+                @Override
+                public void onSuccess(List<Participant> loadedParticipants) {
+                    runOnUiThread(() -> {
+                        if (loadedParticipants != null) {
+                            for (Participant p : loadedParticipants) {
+                                adapter.addParticipant(p);
+                            }
+                        }
+                    });
+                }
+
+                @Override
+                public void onError(String message) {
+                    Log.e("VideoHub", "Error loading participants: " + message);
+                }
+            });
+        }
     }
 
     @Override
@@ -153,30 +181,11 @@ public class VideoHub extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private void loadParticipants() {
-        // Используем roomId напрямую вместо viewModel.getCurrentRoomId()
-        if (conferenceId != null) {
-            repository.getParticipants(conferenceId, new ConferenceRepository.ParticipantsCallback() {
-                @Override
-                public void onSuccess(List<Participant> loadedParticipants) {
-                    runOnUiThread(() -> {
-                        if (loadedParticipants != null) {
-                            for (Participant p : loadedParticipants) {
-                                adapter.addParticipant(p);
-                            }
-                        }
-                    });
-                }
-
-                @Override
-                public void onError(String message) {
-                    // Handle error
-                }
-            });
-        }
-    }
-
     public String getConferenceId() {
         return conferenceId;
+    }
+
+    public ChatViewModel getChatViewModel() {
+        return chatViewModel;
     }
 }

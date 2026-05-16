@@ -93,7 +93,7 @@ public class ChatFragment extends BottomSheetDialogFragment {
                 Message message = Message.create(
                         messageContent,
                         cache.getUserId(),
-                        videoCallVM.getCurrentRoomId()
+                        conferenceId
                 );
                 chatViewModel.sendMessage(message);
                 binding.messageEdit.setText("");
@@ -146,6 +146,7 @@ public class ChatFragment extends BottomSheetDialogFragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        chatViewModel.stop();
         binding = null;
         messageAdapter = null;
     }

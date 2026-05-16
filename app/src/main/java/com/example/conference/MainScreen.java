@@ -107,11 +107,22 @@ public class MainScreen extends AppCompatActivity {
         // Кнопка "Войти" (по коду из EditText)
         binding.joinButton.setOnClickListener(v -> {
             String roomCode = binding.joinCodeInput.getText().toString().trim();
+
             if (!roomCode.isEmpty()) {
-                repository.joinConferenceByCode(roomCode, cache.getUserId());
-                Intent intent = new Intent(this, VideoHub.class);
-                intent.putExtra("ROOM_ID", roomCode);
-                startActivity(intent);
+                repository.joinConferenceByCode(roomCode, cache.getUserId(), new ConferenceRepository.JoinCallback() {
+                    @Override
+                    public void onSuccess(ConferenceResponce conference) {
+                        Intent intent = new Intent(MainScreen.this, VideoHub.class);
+                        intent.putExtra("ROOM_ID", roomCode);
+                        intent.putExtra("CONFERENCE_ID", conference.getId());
+                        startActivity(intent);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Toast.makeText(MainScreen.this, "Ошибка: " + message, Toast.LENGTH_SHORT).show();
+                    }
+                });
             } else {
                 Toast.makeText(this, "Введите код встречи", Toast.LENGTH_SHORT).show();
             }

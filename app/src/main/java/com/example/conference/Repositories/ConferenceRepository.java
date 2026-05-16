@@ -31,6 +31,11 @@ public class ConferenceRepository {
         void onError(String message);
     }
 
+    public interface JoinCallback {
+        void onSuccess(ConferenceResponce conference);
+        void onError(String message);
+    }
+
     public interface ParticipantsCallback {
         void onSuccess(List<Participant> participants);
         void onError(String message);
@@ -89,22 +94,24 @@ public class ConferenceRepository {
         return new ArrayList<>();
     }
 
-    public void joinConferenceByCode(String code, String userId) {
-        api.joinConferenceByCode(code, userId).enqueue(new Callback<ResponseBody>() {
+    public void joinConferenceByCode(String code, String userId, JoinCallback callback) {
+        api.joinConferenceByCode(code, userId).enqueue(new Callback<ConferenceResponce>() {
             @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+            public void onResponse(Call<ConferenceResponce> call, Response<ConferenceResponce> response) {
                 if(response.isSuccessful() && response.body() != null){
-                    Log.d("ConferenceRepository", "Успешно присоединились к конференции");
-                }
-                else{
+                    callback.onSuccess(response.body());
+                }else{
                     Log.e("ConferenceRepository", "Ошибка сервера: " + response.code());
+                    callback.onError("Ошибка сервера: " + response.code());
                 }
             }
 
             @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
+            public void onFailure(Call<ConferenceResponce> call, Throwable t) {
                 Log.e("ConferenceRepository", "Ошибка при присоединении: " + t.getMessage());
+                callback.onError(t.getMessage());
             }
+
         });
     }
 
