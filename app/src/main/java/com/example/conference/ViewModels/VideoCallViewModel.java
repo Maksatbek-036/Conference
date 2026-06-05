@@ -77,7 +77,7 @@ public class VideoCallViewModel extends AndroidViewModel {
     }
 
     private void initSignalR() {
-        String serverUrl = "http://192.168.0.106:5000/hubs/video";
+        String serverUrl = "http://185.255.132.217:5000/hubs/video";
         hubConnection = HubConnectionBuilder.create(serverUrl).build();
 
         hubConnection.on("UserJoined", (userId) -> {

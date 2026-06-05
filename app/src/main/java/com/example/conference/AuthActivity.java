@@ -3,6 +3,7 @@ package com.example.conference;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,41 +28,49 @@ public class AuthActivity extends AppCompatActivity {
         binding = ActivityAuthBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-
-
         viewModel = new AuthViewModel();
-if(cache.getToken()!=null){
-    startActivity(new Intent(this, MainScreen.class));
-    finish();
-}
+
+        // Если токен уже сохранён — сразу идём на главный экран
+        if (cache.getToken() != null) {
+            startActivity(new Intent(this, MainScreen.class));
+            finish();
+            return;
+        }
+
         binding.signButton.setOnClickListener(v -> {
-            String email = binding.email.getText().toString();
-            String password = binding.password.getText().toString();
+            String email = binding.email.getText().toString().trim();
+            String password = binding.password.getText().toString().trim();
 
-            // вызываем login → обновляется LiveData
+            if (email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Введите email и пароль", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             viewModel.login(email, password);
-            var token=viewModel.getToken();
-
-            String json = JWTDecoder.decodedPayload(token);
-
-            if (json != null) {
-                JWTPayload payload = new Gson().fromJson(json, JWTPayload.class);
-
-                // Пример использования
-                cache.saveUserInfo(payload);
-                String username = payload.getName();
-                Log.d("AUTH", "Добро пожаловать, " + username);
-            }
-
-            cache.saveToken(viewModel.getToken());
-            if(cache.getToken()!=null){
-                startActivity(new Intent(this, MainScreen.class));
-            }
-
         });
-        binding.registerButton.setOnClickListener(v -> {
-            startActivity(new Intent(this, RegisterActivity.class));
 
+        // Подписка на результат авторизации
+        viewModel.getAuthResult().observe(this, result -> {
+            if (result.isSuccess()) {
+                String token = result.getToken();
+                if (token != null) {
+                    cache.saveToken(token);
+
+                    String json = JWTDecoder.decodedPayload(token);
+                    if (json != null) {
+                        JWTPayload payload = new Gson().fromJson(json, JWTPayload.class);
+                        cache.saveUserInfo(payload);
+                        Log.d("AUTH", "Добро пожаловать, " + payload.getName());
+                    }
+                }
+
+                Toast.makeText(this, "Вход успешен", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, MainScreen.class));
+                finish();
+            } else {
+                Toast.makeText(this, "Ошибка входа", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 }
+

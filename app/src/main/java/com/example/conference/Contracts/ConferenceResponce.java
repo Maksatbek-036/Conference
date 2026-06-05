@@ -85,6 +85,16 @@ public class ConferenceResponce {
     @SerializedName("code")
     private String code;
 
+    public ConferenceResponce(String id, String titles, String description, String date, String startTime, String endTime, String location) {
+        this.id = id;
+        this.titles = titles;
+        this.description = description;
+        this.date = date;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.location = location;
+    }
+
     public String getCode() {
         return code;
     }

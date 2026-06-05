@@ -6,29 +6,32 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".VideoHub">
-    <TextView
-        android:id="@+id/id_room"
-        tools:text="Комната"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:layout_marginTop="20dp"
-        tools:ignore="MissingConstraints" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/participantsRecycler"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         tools:listitem="@layout/participant_item"
         app:spanCount="2"
-
-
-        android:layout_marginTop="3dp"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
 
-
+        android:layout_marginTop="3dp"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/id_room"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        tools:text="Комната"
+        android:textColor="@color/emerald600"
+        android:textSize="20sp"
+
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

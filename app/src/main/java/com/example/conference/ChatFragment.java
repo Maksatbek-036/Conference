@@ -23,6 +23,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -48,12 +49,6 @@ public class ChatFragment extends BottomSheetDialogFragment {
         conferenceId = ((VideoHub) requireActivity()).getConferenceId();
         videoCallVM = new ViewModelProvider(requireActivity()).get(VideoCallViewModel.class);
         chatViewModel = ((VideoHub) requireActivity()).getChatViewModel();
-
-        chatViewModel.setOnUserJoined(userId ->
-                Toast.makeText(requireContext(), "User joined: " + userId, Toast.LENGTH_SHORT).show()
-        );
-
-        chatViewModel.start();
     }
 
     @Override
@@ -62,31 +57,60 @@ public class ChatFragment extends BottomSheetDialogFragment {
                              @Nullable Bundle savedInstanceState) {
         binding = FragmentChatBinding.inflate(inflater, container, false);
 
-        // создаём адаптер с пустым списком
         messageAdapter = new MessageAdapter(new ArrayList<>(), participantList, cache.getUserId());
         binding.chatRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.chatRecycler.setAdapter(messageAdapter);
 
+        chatViewModel.start();
         setupClickListeners();
-        observeRemoteParticipants();
-        observeRealtimeMessages();
-        getMessageAtRest(); // загрузка истории
+        observeUserJoined();
+        observeErrors();
+        observeConnectionState();
+        getMessageAtRest();
+
+
 
         return binding.getRoot();
     }
 
     private void observeRealtimeMessages() {
-        chatViewModel.setOnMessagesUpdated(msgs -> {
+        chatViewModel.getMessagesLiveData().observe(getViewLifecycleOwner(), msgs -> {
             messageAdapter.updateMessages(msgs);
             if (!msgs.isEmpty()) {
-                binding.chatRecycler.scrollToPosition(msgs.size() - 1);
+                LinearLayoutManager layoutManager = (LinearLayoutManager) binding.chatRecycler.getLayoutManager();
+                if (layoutManager != null) {
+                    int lastVisible = layoutManager.findLastCompletelyVisibleItemPosition();
+                    if (lastVisible >= msgs.size() - 2) {
+                        binding.chatRecycler.scrollToPosition(msgs.size() - 1);
+                    }
+                }
             }
-            messageAdapter.notifyDataSetChanged();
         });
+    }
 
+    private void observeUserJoined() {
+        chatViewModel.getUserJoinedLiveData().observe(getViewLifecycleOwner(), userId -> {
+            Toast.makeText(requireContext(), "User joined: " + userId, Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void observeErrors() {
+        chatViewModel.getErrorLiveData().observe(getViewLifecycleOwner(), error -> {
+            Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void observeConnectionState() {
+        chatViewModel.getConnectionStateLiveData().observe(getViewLifecycleOwner(), isConnected -> {
+            if (isConnected != null) {
+                String status = isConnected ? "Соединение установлено" : "Соединение потеряно";
+                Toast.makeText(requireContext(), status, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void setupClickListeners() {
+        observeRealtimeMessages();
         binding.sendButton.setOnClickListener(v -> {
             String messageContent = binding.messageEdit.getText().toString().trim();
             if (!messageContent.isEmpty()) {
@@ -114,34 +138,31 @@ public class ChatFragment extends BottomSheetDialogFragment {
 
             @Override
             public void onFailure(Call<List<Message>> call, Throwable t) {
+                Toast.makeText(requireContext(), "Ошибка загрузки истории", Toast.LENGTH_SHORT).show();
                 Log.e("ChatFragment", "Ошибка загрузки истории", t);
             }
         });
     }
 
-    private void observeRemoteParticipants() {
-        videoCallVM.remoteTracks.observe(getViewLifecycleOwner(), tracks -> {
-            if (tracks != null) {
-                for (String userId : tracks.keySet()) {
-                    boolean alreadyExists = participantList.stream()
-                            .anyMatch(p -> p.getId().equals(userId));
-                    if (!alreadyExists) {
-                        participantList.add(new Participant(
-                                userId,
-                                "Участник " + userId.substring(0, Math.min(userId.length(), 4)),
-                                null,
-                                false,
-                                true,
-                                System.currentTimeMillis()
-                        ));
-                    }
-                }
-                // обновляем участников в адаптере
-                messageAdapter.updateParticipants(participantList);
-            }
-        });
-    }
+    private void updateParticipants(Map<String, Object> tracks) {
+        participantList.removeIf(p -> !tracks.containsKey(p.getId()));
 
+        for (String userId : tracks.keySet()) {
+            boolean alreadyExists = participantList.stream()
+                    .anyMatch(p -> p.getId().equals(userId));
+            if (!alreadyExists) {
+                participantList.add(new Participant(
+                        userId,
+                        "Участник " + userId.substring(0, Math.min(userId.length(), 4)),
+                        null,
+                        false,
+                        true,
+                        System.currentTimeMillis()
+                ));
+            }
+        }
+        messageAdapter.updateParticipants(participantList);
+    }
 
     @Override
     public void onDestroyView() {
@@ -149,5 +170,6 @@ public class ChatFragment extends BottomSheetDialogFragment {
         chatViewModel.stop();
         binding = null;
         messageAdapter = null;
+        participantList.clear();
     }
 }

@@ -33,7 +33,7 @@ public class VideoHub extends AppCompatActivity {
     private String conferenceId; // GUID для API (например, "4543db1d-...")
     private Cache cache;
 
-    public static final String CHAT_HUB_URL = "http://192.168.0.106:5000";
+    public static final String CHAT_HUB_URL = "http://185.255.132.217:5000";
 
     private final String[] REQUIRED_PERMISSIONS = {
             Manifest.permission.CAMERA,

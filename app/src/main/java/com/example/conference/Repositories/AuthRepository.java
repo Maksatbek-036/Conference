@@ -16,67 +16,59 @@ import retrofit2.Response;
 
 public class AuthRepository {
     private final AuthApi authApi;
-    private String token="";
-    private Boolean result=false;
 
     public AuthRepository() {
         this.authApi = RetrofitClient.getApi(AuthApi.class);
     }
 
+    // Интерфейс для обратного вызова
+    public interface Callback {
+        void onSuccess(String token);
+        void onError(String errorMessage);
+    }
+
     // Логин пользователя — асинхронно
-    public String oauthLogin(LoginUserRequest loginUserRequest) {
-
-
-        authApi.login(loginUserRequest).enqueue(new Callback<String>() {
+    public void oauthLoginAsync(LoginUserRequest loginUserRequest, Callback callback) {
+        authApi.login(loginUserRequest).enqueue(new retrofit2.Callback<String>() {
             @Override
             public void onResponse(Call<String> call, Response<String> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                   token = response.body();
+                    callback.onSuccess(response.body());
                     Log.d("AuthRepository", "Token: " + response.body());
                 } else {
-                    token="";
+                    callback.onError("Ошибка авторизации: " + response.code());
                     Log.e("AuthRepository", "Ошибка авторизации: " + response.code());
                 }
-
             }
 
-            @SuppressLint("SuspiciousIndentation")
             @Override
             public void onFailure(Call<String> call, Throwable t) {
-              token="";
+                callback.onError("Ошибка сети: " + t.getMessage());
                 Log.e("AuthRepository", "Ошибка сети: " + t.getMessage());
             }
         });
-
-        return token;
     }
 
     // Регистрация пользователя — асинхронно
-    public Boolean authenticateUser(RegisterUserRequest registerUserRequest) {
-     result = false;
-
-        authApi.register(registerUserRequest).enqueue(new Callback<Void>() {
+    public void registerAsync(RegisterUserRequest registerUserRequest, Callback callback) {
+        authApi.register(registerUserRequest).enqueue(new retrofit2.Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-
                 if (response.isSuccessful()) {
-                    result = true;
+                    callback.onSuccess("Регистрация успешна");
                     Log.d("AuthRepository", "Регистрация успешна");
                 } else {
-                    result=false;
+                    callback.onError("Ошибка регистрации: " + response.code());
                     Log.e("AuthRepository", "Ошибка регистрации: " + response.code());
                 }
-
-
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-
+                callback.onError("Ошибка сети: " + t.getMessage());
                 Log.e("AuthRepository", "Ошибка сети: " + t.getMessage());
             }
         });
-
-        return result;
     }
 }
+

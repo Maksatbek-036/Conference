@@ -1,5 +1,7 @@
 package com.example.conference;
 
+import static androidx.core.content.ContentProviderCompat.requireContext;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +21,7 @@ import com.example.conference.databinding.ActivityMainScreenBinding;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -27,6 +30,7 @@ public class MainScreen extends AppCompatActivity {
     private ActivityMainScreenBinding binding;
     private ConferenceRepository repository;
     private ConferenceApi api ;
+    private List<ConferenceResponce> conferences;
     private ConferenceAdapter adapter;
     private Cache cache;
 
@@ -47,13 +51,15 @@ public class MainScreen extends AppCompatActivity {
             Log.e("MainScreen", "Token отсутствует в кэше");
         }
 
+
+
         // Настройка RecyclerView
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new ConferenceAdapter(new ArrayList<>(),repository,cache.getUserId());
         binding.recyclerView.setAdapter(adapter);
 
         repository = new ConferenceRepository(api);
-
+conferences=new ArrayList();
         loadConferences();
 
         // Кнопка "Новая встреча"
@@ -65,33 +71,45 @@ public class MainScreen extends AppCompatActivity {
             String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(now);
             String currentTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(now);
 
+            // Вычисляем время окончания (+1 час)
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(now);
+            calendar.add(Calendar.HOUR_OF_DAY, 1);
+            String endTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.getTime());
+
             repository.createConference(
                     cache.getUserId(),
-                    "Новая конференция от пользователя: " + cache.getUserName(),
-                    "Нет описания",
-                    "Нет локации",
-                    currentDate,   // текущая дата
-                    "",            // joinUrl (оставляем пустым)
-                    currentTime,   // текущее время
-                    false,
+                    "Новая встреча от " + cache.getUserName(),
+                    "нет описания",
+                    " ",
+                    currentDate,
+                    currentTime,
+                    endTime,
+                    true,
                     new ConferenceRepository.CreateCallback() {
                         @Override
                         public void onSuccess(Conference conference) {
-                            Toast.makeText(
-                                    MainScreen.this,
-                                    "Конференция создана: " + conference.getId() +
-                                            " (" + currentDate + " " + currentTime + ")",
-                                    Toast.LENGTH_SHORT
-                            ).show();
+                           conferences.add(new ConferenceResponce(
+                                   conference.getId(),
+                                   conference.getTitles(),
+                                   conference.getDescription(),
+                                   conference.getDate(),
+                                   conference.getStartTime(),
+                                   conference.getEndTime(),
+                                   conference.getLocation()
+                           ));
+                            // например, вызвать метод в ViewModel:
+                            // chatViewModel.addSystemMessage("Создана новая конференция: " + conference.getTitle());
                         }
 
                         @Override
                         public void onError(String message) {
-                            Toast.makeText(MainScreen.this, "Ошибка: " + message, Toast.LENGTH_SHORT).show();
+
                         }
                     }
             );
-        });
+
+    });
         binding.outButton.setOnClickListener(v->{
             cache.clear();
             startActivity(new Intent(this, AuthActivity.class));
@@ -141,6 +159,7 @@ public class MainScreen extends AppCompatActivity {
 
     private void loadConferences() {
         String userId = cache.getUserId();
+
         if (userId == null || userId.isEmpty()) {
             Toast.makeText(this, "Ошибка: UserId отсутствует", Toast.LENGTH_SHORT).show();
             return;
@@ -148,8 +167,9 @@ public class MainScreen extends AppCompatActivity {
 
         repository.fetchConferences(new ConferenceRepository.ConferenceCallback() {
             @Override
-            public void onSuccess(List<ConferenceResponce> conferences) {
-                adapter.setConferences(conferences);
+            public void onSuccess(List<ConferenceResponce> conferencesres) {
+            conferences.addAll(conferencesres);
+            adapter.setConferences(conferences);
             }
 
             @Override

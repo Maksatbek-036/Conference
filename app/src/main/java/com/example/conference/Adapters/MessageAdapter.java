@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.conference.Models.Message;
@@ -14,13 +15,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageViewHolder> {
-    private final ArrayList<Message> messages;
-    private final ArrayList<Participant> participants;
+    private List<Message> messages;
+    private List<Participant> participants;
     private final String currentUserId;
 
-    public MessageAdapter(ArrayList<Message> messages, ArrayList<Participant> participants, String currentUserId) {
-        this.messages = messages;
-        this.participants = participants;
+    public MessageAdapter(List<Message> messages, List<Participant> participants, String currentUserId) {
+        this.messages = new ArrayList<>(messages);
+        this.participants = new ArrayList<>(participants);
         this.currentUserId = currentUserId;
     }
 
@@ -33,7 +34,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
-        holder.bind(participants, messages.get(position), currentUserId);
+        holder.bind(new ArrayList<>(participants), messages.get(position), currentUserId);
     }
 
     @Override
@@ -43,19 +44,46 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageViewHolder> {
 
     // Добавление одного сообщения
     public void addMessage(Message message) {
-        messages.add(message);
-        notifyItemInserted(messages.size() - 1);
+        List<Message> newList = new ArrayList<>(messages);
+        newList.add(message);
+        updateMessages(newList);
     }
+
+    // Обновление участников
     public void updateParticipants(List<Participant> newParticipants) {
-        this.participants.clear();
-        this.participants.addAll(newParticipants);
+        this.participants = new ArrayList<>(newParticipants);
         notifyDataSetChanged();
     }
 
-
+    // Обновление списка сообщений через DiffUtil
     public void updateMessages(List<Message> newMessages) {
-        messages.clear();
-        messages.addAll(newMessages);
-        notifyDataSetChanged(); // обязательно!
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override
+            public int getOldListSize() {
+                return messages.size();
+            }
+
+            @Override
+            public int getNewListSize() {
+                return newMessages.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                // Сравниваем по уникальному ID сообщения
+                String oldId = messages.get(oldItemPosition).getId();
+                String newId = newMessages.get(newItemPosition).getId();
+                return oldId != null && oldId.equals(newId);
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                // Сравниваем содержимое
+                return messages.get(oldItemPosition).equals(newMessages.get(newItemPosition));
+            }
+        });
+
+        messages = new ArrayList<>(newMessages);
+        diffResult.dispatchUpdatesTo(this);
     }
 }
